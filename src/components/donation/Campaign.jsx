@@ -295,6 +295,7 @@ const CampaignPage = () => {
           open={isDonationModalVisible}
           handleClose={closeDonationModal}
           setIsDonationModalVisible={setIsDonationModalVisible}
+          donation_campaign_id={id}
         />
       )}
       <div className="visible md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full border-2 flex justify-center py-2 bg-white">

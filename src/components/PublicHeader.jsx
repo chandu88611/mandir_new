@@ -25,6 +25,7 @@ const PublicHeader = () => {
   const [token, setToken] = useState(null);
   const [fetchData,{data}]=useLazyGetUserProfileQuery()
   const user =useSelector(state=>state.user.userData)
+  console.log(user)
 const dispatch =useDispatch()
   useEffect(() => {
     if(localStorage.getItem("authToken")){
@@ -33,7 +34,7 @@ const dispatch =useDispatch()
           
           const res=await fetchData()
           if(res?.data?.status){
-         dispatch(setUserData(res?.data?.data))  
+         dispatch(setUserData({...res?.data?.data,donations:res?.data?.donations}))  
           }else{
             localStorage.removeItem('authToken')
             window.location.reload()

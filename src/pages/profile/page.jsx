@@ -32,6 +32,7 @@ import CampaignForm from "../../components/donation/UserCreateDonation"; // Assu
 import { CiHeart } from "react-icons/ci";
 import { setUserData } from "../../redux/slices/userSlice";
 import Swal from "sweetalert2";
+import DonationsList from "./DonationsList";
 
 const ProfileMenu = styled.div`
   min-width: 200px;
@@ -55,6 +56,7 @@ const HiddenInput = styled.input`
 
 const ProfilePage = () => {
   const user = useSelector((data) => data?.user?.userData); // Get user data from Redux
+  console.log(user)
   const [activeTab, setActiveTab] = useState("Profile");
   const [editMode, setEditMode] = useState(false); // Track if user is editing
   const [loading, setLoading] = useState(false); // Track if save is in progress
@@ -264,7 +266,7 @@ const ProfilePage = () => {
         );
       case "Donations":
         return (
-          <Typography variant="h6">Your Donations will be listed here...</Typography>
+        <DonationsList donations={user?.donations}/>
         );
       case "Campaigns":
         return (
