@@ -99,8 +99,8 @@ const CampaignPage = () => {
   const closeDonationModal = () => {
     setIsDonationModalVisible(false);
   };
-
   const paginationRef = useRef(null);
+  const [showFullStory, setShowFullStory] = useState(false);
   useEffect(() => {
     if (paginationRef.current) {
       paginationRef.current.classList.add("custom-swiper-pagination");
@@ -123,166 +123,189 @@ const CampaignPage = () => {
           {campaign?.beneficiary || "Category"}
         </span> */}
       </div>
-
-      {/* Main Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-2 min-h-[100vh]" >
-        <div className="md:col-span-3 h-full">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-8 min-h-screen px-4 md:px-8 bg-gray-50 py-6">
+        {/* Left Column - Images & Content */}
+        <div className="md:col-span-3">
           {/* Image Carousel */}
-          <div className=" h-fit rounded-md">
+          <div className="relative w-full rounded-xl shadow-lg overflow-hidden">
             {campaign?.other_pictures?.length > 0 ? (
               <Swiper
                 slidesPerView={1}
-                // spaceBetween={10}
                 navigation={true}
-                pagination={{
-                  clickable: true,
-                  el: ".swiper-pagination",
-                }}
-                autoplay={{
-                  delay: 2500,
-                  disableOnInteraction: false,
-                }}
+                pagination={{ clickable: true, el: ".swiper-pagination" }}
+                autoplay={{ delay: 2500, disableOnInteraction: false }}
                 loop
                 speed={1000}
                 modules={[Autoplay, Pagination, Navigation]}
-                className="w-full  "
+                className="w-full"
               >
                 {campaign?.other_pictures?.map((image, i) => (
-                  <SwiperSlide
-                    className="flex items-center w-full justify-center h-96 mb-[30px] !rounded-[15px]  "
-                    key={i + "1"}
-                  >
+                  <SwiperSlide key={i} className="relative group">
                     <img
                       src={image}
                       alt={`Slide ${i + 1}`}
-                      className="w-full h-[250px] md:h-[360px]  shadow-md "
+                      className="w-full h-[280px] md:h-[420px] object-cover rounded-xl transition-transform duration-300 group-hover:scale-105"
                     />
+                    {/* Overlay Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent opacity-40"></div>
                   </SwiperSlide>
                 ))}
-                <div
-                  ref={paginationRef}
-                  className="swiper-pagination rounded-[15px]"
-                ></div>
               </Swiper>
             ) : (
-              <p>No images available</p>
+              <p className="text-center text-gray-500">No images available</p>
             )}
-
-            {/* Slide Number Display */}
-            <div className="bg-white p-2 visible md:hidden rounded-md shadow-md text-center">
-              <h2 className="text-3xl font-bold text-green-600">
-                ₹{campaign?.minimum_amount?.$numberDecimal || "0"}
-              </h2>
-              <p className="text-gray-600">
-                Raised of ₹{campaign?.target_amount?.$numberDecimal || "0"}
-              </p>
-              <div className="visibleButton">
-                <button
-                  onClick={openDonationModal}
-                  className="bg-[#d8573e] text-white px-6 py-2 rounded-full font-bold shadow-md w-[85%]"
-                >
-                  DONATE NOW
-                </button>
-              </div>
-
-              <div className="mt-4 flex justify-center">
-                <button
-                  onClick={openShareModal}
-                  className="text-blue-500 underline"
-                >
-                  Share this Campaign
-                </button>
-              </div>
-            </div>
           </div>
 
-          {/* Description */}
-          <div className="bg-white p-2 rounded-md shadow-md mt-2">
-            <h3 className="text-xl  mb-4 text-center bg-[#52cbff] text-black rounded-t-md py-2">
-              Story & Updates
-            </h3>
-            <div className="text-gray-700 mb-4   custom-scrollbar">
-              {/* {campaign?.campaign_description || "No description available"} */}
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: campaign?.campaign_description,
-                }}
-              />
-            </div>
-          </div>
-          {campaign?.video_link && (
-            <div
-              dangerouslySetInnerHTML={{ __html: campaign?.video_link }}
-              className="w-full h-[220px] md:h-[350px] mt-4 rounded-md overflow-hidden"
-            />
-          )}
-              <div className="bg-white p-2 rounded-md shadow-md !mt-10">
-            <h3 className="text-xl font-bold mb-4">FAQs</h3>
-            <FAQ />
-          </div>
-        </div>
-        
-        <div
-          className=" md:col-span-2 md:h-[100vh]"
-          style={{ position: "sticky", top: "100px" }}
-        >
-          <div className="bg-white p-2  rounded-md shadow-md text-center visibleButton">
-            <h2 className="text-3xl font-bold text-green-600">
+          {/* Donation Box (Mobile View) */}
+          <div className="bg-white p-6 rounded-xl shadow-md text-center mt-6 md:hidden">
+            <h2 className="text-3xl font-extrabold bg-gradient-to-r from-green-400 to-blue-500 text-transparent bg-clip-text">
               ₹{campaign?.minimum_amount?.$numberDecimal || "0"}
             </h2>
             <p className="text-gray-600">
               Raised of ₹{campaign?.target_amount?.$numberDecimal || "0"}
             </p>
-            <div className="">
+
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 h-3 rounded-full mt-3">
+              <div
+                className="h-3 bg-green-500 rounded-full transition-all duration-500"
+                style={{
+                  width: `${
+                    (campaign?.minimum_amount?.$numberDecimal /
+                      campaign?.target_amount?.$numberDecimal) *
+                      100 || 0
+                  }%`,
+                }}
+              ></div>
+            </div>
+
+            <button
+              onClick={openDonationModal}
+              className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 mt-4 rounded-full font-bold shadow-lg w-full transition-all duration-300"
+            >
+              DONATE NOW
+            </button>
+
+            <button
+              onClick={openShareModal}
+              className="text-blue-500 underline mt-3 block text-sm"
+            >
+              Share this Campaign
+            </button>
+          </div>
+
+          {/* Description Section */}
+          <div className="bg-white p-5 rounded-xl shadow-md mt-6">
+            <h3 className="text-lg font-semibold text-center bg-blue-500 text-white py-3 rounded-t-xl">
+              Story & Updates
+            </h3>
+            <div className="text-gray-700 p-2 leading-relaxed">
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: showFullStory
+                    ? campaign?.campaign_description
+                    : campaign?.campaign_description?.slice(0, 300) + "...",
+                }}
+              />
+              {!showFullStory && (
+                <button
+                  onClick={() => setShowFullStory(true)}
+                  className="text-blue-500 mt-3 underline block text-center"
+                >
+                  Read More
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Video Section */}
+          {campaign?.video_link && (
+            <div
+              dangerouslySetInnerHTML={{ __html: campaign?.video_link }}
+              className="w-full h-[250px] md:h-[380px] mt-6 rounded-lg overflow-hidden shadow-lg transition-all hover:scale-105"
+            />
+          )}
+
+          {/* FAQ Section */}
+          <div className="bg-white p-5 rounded-xl shadow-md mt-10">
+            <h3 className="text-lg font-semibold">FAQs</h3>
+            <FAQ />
+          </div>
+        </div>
+        <div
+          className="md:col-span-2 md:h-[80vh] flex flex-col items-center justify-center p-6 rounded-lg shadow-lg"
+          style={{
+            position: "sticky",
+            top: "80px",
+            background: "linear-gradient(135deg, #e0f7fa, #b3e5fc)", // Light Blue Gradient
+          }}
+        >
+          {/* Donation Card */}
+          <div className="w-full max-w-md bg-white/70 backdrop-blur-md p-6 rounded-lg shadow-xl text-center">
+            <h2 className="text-5xl font-extrabold text-blue-600 animate-pulse">
+              ₹{campaign?.minimum_amount?.$numberDecimal || "0"}
+            </h2>
+            <p className="text-gray-700 font-semibold mt-2 text-lg">
+              Raised of ₹{campaign?.target_amount?.$numberDecimal || "0"}
+            </p>
+
+            {/* Donate Button */}
+            <div className="mt-6">
               <button
                 onClick={openDonationModal}
-                className="bg-[#d8573e] text-white px-6 py-2 rounded-full font-bold shadow-md w-[85%]"
+                className="bg-[#b3e5fc] text-blue-500 font-bold text-sm px-3 py-2 rounded-full shadow-md transition duration-300 transform hover:scale-110 hover:bg-blue-500 group animate-bounce"
               >
-                DONATE NOW
+                <span className="group-hover:text-white transition duration-300">
+                  💙 DONATE NOW
+                </span>
               </button>
             </div>
 
-            <div className="mt-4 flex justify-center">
+            {/* Share Section */}
+            <div className="mt-6 flex flex-col items-center">
+              <p className="text-gray-500 text-sm">Want to spread the word?</p>
               <button
                 onClick={openShareModal}
-                className="text-blue-500 underline"
+                className="mt-2 text-blue-700 font-semibold hover:underline hover:text-blue-900 transition duration-200"
               >
                 Share this Campaign
               </button>
             </div>
           </div>
-          <div className="bg-white p-2 border-t rounded-md shadow-md ">
-            <h3 className="text-lg font-semibold ml-3   text-black rounded-t-md ">
+
+          {/* Campaign Details */}
+          <div className="w-full max-w-md bg-white/80 backdrop-blur-md p-6 mt-6 rounded-lg shadow-lg border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               Campaign Details
             </h3>
-            <hr className="my-2" />
+            <hr className="my-3" />
+
             <ul className="space-y-4">
               <li className="flex items-center space-x-3">
-                <div className="bg-yellow-500 uppercase text-white w-8 h-8 flex justify-center items-center rounded-full font-bold">
+                <div className="bg-yellow-500 text-white uppercase w-10 h-10 flex justify-center items-center rounded-full font-bold shadow-md">
                   {campaign?.ngo_name?.charAt(0)}
                 </div>
                 <div>
-                  <p className="text-gray-900 font-semibold capitalize ">
+                  <p className="text-gray-900 font-semibold capitalize">
                     {campaign?.ngo_name || "NGO Name"}
                   </p>
-                  <p className="text-gray-600">Beneficiary</p>
+                  <p className="text-gray-500 text-sm">Beneficiary</p>
                 </div>
               </li>
+
               <li className="flex items-center space-x-3">
-                <div className="bg-green-500 text-white uppercase w-8 h-8 flex justify-center items-center rounded-full font-bold">
+                <div className="bg-green-500 text-white uppercase w-10 h-10 flex justify-center items-center rounded-full font-bold shadow-md">
                   {campaign?.state?.charAt(0)}
                 </div>
                 <div>
                   <p className="text-gray-900 font-semibold capitalize">
                     {campaign?.state}
                   </p>
-                  <p className="text-gray-600">Location</p>
+                  <p className="text-gray-500 text-sm">Location</p>
                 </div>
               </li>
             </ul>
           </div>
-
-      
         </div>
       </div>
       <ShareCampaignModal
