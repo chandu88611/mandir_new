@@ -24,6 +24,7 @@ const DonationForm = ({
   const [verifyPayment] = useVerifyPaymentMutation(); // OTP verification mutation
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
+  console.log(user)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [donationAmount, setDonationAmount] = useState(1000);
   const [supportPercent, setSupportPercent] = useState(5);
@@ -32,9 +33,7 @@ const DonationForm = ({
   const [total, setTotal] = useState();
   const [createOrder] = useCreateOrderMutation();
   const [userData, setUserData1] = useState({
-    full_name: "",
-    email: "",
-    mobile_number: "",
+    mobile_number: user?.userData?.mobile_number||"",
   });
 
   useEffect(() => {
@@ -50,7 +49,7 @@ const DonationForm = ({
 
   const handleDonateNow = async () => {
     if (!isLoggedIn) {
-      if (!userData.full_name || !userData.email || !userData.mobile_number) {
+      if (  !userData.mobile_number) {
         message.error("Please fill in all required fields.");
         return;
       }
@@ -80,7 +79,7 @@ const DonationForm = ({
   // Function to handle OTP form submission
   const handleOtpSubmit = async () => {
     if (otp.length === 6) {
-      // Call the verify OTP API
+   
       try {
         const response = await verifyOtp({
           mobile_number: userData.mobile_number,
@@ -89,7 +88,7 @@ const DonationForm = ({
 
         // OTP verified successfully, log in the user
         message.success(response.data.message);
-        console.log(response);
+         
         localStorage.setItem("authToken", response.data.token);
         setUserData1(response.data.user);
         dispatch(setUserData(response.data.user));
@@ -128,23 +127,23 @@ const DonationForm = ({
 
   const triggerRazorpay = (orderData, donationId) => {
     const options = {
-      key: "rzp_live_qMGIKf7WORiiuM", // Add your Razorpay Key ID
+      key: "rzp_live_qMGIKf7WORiiuM",  
       amount: calculateTotal(),
       currency: "INR",
       name: "Giveaze",
       description: "Donation Payment",
-      order_id: orderData.id, // Razorpay Order ID
+      order_id: orderData.id,  
       handler: async function (response) {
-        console.log(response);
+ 
         try {
-          // 3️⃣ Verify payment with backend
+        
           const verifyResponse = await verifyPayment({
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
             donation_campaign_id: donation_campaign_id,
             user_id: user?.userData?._id,
-            amount: calculateTotal(),
+            amount: calculateTotal()
           }).unwrap();
 
           if (verifyResponse.success) {
@@ -153,7 +152,10 @@ const DonationForm = ({
             setTimeout(() => {
               window.location.reload();
             }, 2000);
-          } else {
+           } else {
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
             message.error("Payment verification failed.");
           }
         } catch (error) {
@@ -173,6 +175,7 @@ const DonationForm = ({
     const razorpayInstance = new window.Razorpay(options);
     razorpayInstance.open();
   };
+  console.log(userData)
 
   return (
     <div>
@@ -181,7 +184,7 @@ const DonationForm = ({
         open={open}
         onClose={handleClose}
         aria-labelledby="donation-modal"
-        className="flex justify-center items-end md:items-center"
+        className="flex justify-center items-end md:items-center "
       >
         <div className="relative bg-white px-6 pt-5 pb-6 rounded-lg shadow-lg max-w-3xl w-full md:flex">
           {/* Close Button (Top Right) */}
@@ -199,21 +202,21 @@ const DonationForm = ({
             {!isLoggedIn ? (
               <>
                 {/* Full Name */}
-                <input
+                 <input
                   type="text"
-                  className="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
+                  className="w-full p-3 mb-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
                   placeholder="Full Name"
                   value={userData.full_name}
                   onChange={(e) =>
                     setUserData1({ ...userData, full_name: e.target.value })
                   }
                   required
-                />
+                /> 
 
                 {/* Email Address */}
                 <input
                   type="email"
-                  className="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
+                  className="w-full p-3 mb-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
                   placeholder="Email Address"
                   value={userData.email}
                   onChange={(e) =>
@@ -223,10 +226,9 @@ const DonationForm = ({
                 />
 
                 {/* Phone Number */}
-                <div className="flex gap-4 mb-6">
+                <div className="flex gap-4 mb-2">
                   <select className="w-1/3 p-3 border rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition">
                     <option value="+91">+91</option>
-                    <option value="+1">+1</option>
                   </select>
 
                   <input
@@ -249,9 +251,9 @@ const DonationForm = ({
                 {/* Show User's Information When Logged In */}
 
                 <p className="mb-4 text-lg font-medium">
-                  👤 {userData.full_name}
+                  👤 {user.userData.full_name||userData.full_name}
                 </p>
-                <p className="mb-4 text-lg font-medium">📧 {userData.email}</p>
+                <p className="mb-4 text-lg font-medium">📧 {user.userData.email||userData.email}</p>
                 <p className="mb-4 text-lg font-medium">
                   📞 {userData.mobile_number}
                 </p>
@@ -308,14 +310,13 @@ const DonationForm = ({
             <h3 className="font-semibold mb-6 text-left">
               Total Donation: ₹ {calculateTotal()}
             </h3>
-            <div className="flex justify-right">
+            <div className="flex items-center justify-center gap-2 whitespace-nowrap">
               <button
-                className="px-2 py-2 text-sm font-semibold text-white bg-sky-500 rounded-md 
-               shadow-md transition-all duration-300 hover:bg-sky-600 hover:shadow-lg"
+                className="px-20 py-3 md:py-3 text-lg md:text-base font-semibold text-white bg-[#d8573e] rounded-full 
+               shadow-md transition-all duration-300 hover:bg-[#ac4632] hover:shadow-lg"
                 onClick={handleDonateNow}
-              >
-                Proceed to Pay{" "}
-                <span className="ml-2">₹ {calculateTotal()}</span>
+              >Proceed to Pay
+                <span> ₹ {calculateTotal()}</span>
               </button>
             </div>
           </div>
@@ -323,30 +324,64 @@ const DonationForm = ({
       </Modal>
 
       {/* OTP Modal */}
-      <Modal
-        open={otpModalVisible}
-        onClose={() => setOtpModalVisible(false)}
-        aria-labelledby="otp-modal"
-        className="flex justify-center items-center"
-      >
-        <div className="p-6 bg-white rounded-lg shadow-lg max-w-sm w-full ">
-          <h2 className="text-xl font-semibold mb-6">Enter OTP</h2>
-          <input
-            type="text"
-            className="w-full p-3 mb-6 border rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
-            placeholder="Enter OTP"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            required
-          />
-          <button
-            className="bg-[#ffdd04] text-black font-bold py-3 px-6 rounded-lg w-full"
-            onClick={handleOtpSubmit}
-          >
-            Submit OTP
-          </button>
-        </div>
-      </Modal>
+     {/* OTP Modal */}
+<Modal
+  open={otpModalVisible}
+  onClose={() => setOtpModalVisible(false)}
+  aria-labelledby="otp-modal"
+  className="flex justify-center items-center"
+>
+  <div className="p-6 bg-white rounded-2xl shadow-2xl w-full max-w-sm space-y-5">
+    {/* Modal Title */}
+    <div className="text-center">
+      <h2 className="text-2xl font-bold text-gray-900">Verify OTP</h2>
+      <p className="text-sm text-gray-600 mt-1">
+        Sent to {phoneNumber || "+91XXXXXXXXXX"}
+      </p>
+    </div>
+
+    {/* OTP Input */}
+    <input
+      type="text"
+      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8d7f24] focus:border-transparent transition"
+      placeholder="Enter OTP"
+      value={otp}
+      onChange={(e) => setOtp(e.target.value)}
+      maxLength={6}
+      required
+    />
+
+    {/* Resend OTP Section */}
+    <div className="text-center text-sm text-gray-600">
+      {sendOtpInSeconds > 0 ? (
+        <p>Resend OTP in <span className="font-semibold">{sendOtpInSeconds}s</span></p>
+      ) : (
+        <button
+          onClick={handleResendOtp}
+          className="text-[#8d7f24] font-semibold hover:underline"
+        >
+          Resend OTP
+        </button>
+      )}
+    </div>
+
+    {/* Submit Button */}
+    <button
+      className="bg-[#ffdd04] hover:bg-[#e6c903] transition text-black font-bold py-3 px-6 rounded-lg w-full"
+      onClick={handleOtpSubmit}
+    >
+      Submit OTP
+    </button>
+
+    {/* Terms */}
+    <p className="text-xs text-center text-gray-500 leading-relaxed">
+      By continuing, you agree to our{" "}
+      <a href="/terms" className="underline hover:text-black">Terms</a> and{" "}
+      <a href="/privacy-policy" className="underline hover:text-black">Privacy Policy</a>.
+    </p>
+  </div>
+</Modal>
+
     </div>
   );
 };

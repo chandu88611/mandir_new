@@ -97,7 +97,7 @@ const HeroSlider = () => {
                         <div className="mt-4">
                           <div className="flex items-center justify-between text-sm text-gray-600">
                             <span>
-                              {Math.round((Math.round(data?.minimum_amount?.$numberDecimal) / Math.round(data?.target_amount?.$numberDecimal)) * 100)||0}
+                              {Math.round((Math.round(data?.raised_amount?.$numberDecimal) / Math.round(data?.target_amount?.$numberDecimal)) * 100)||0}
                               % raised of  {data?.target_amount?.$numberDecimal || 0}
                             </span>
                           </div>
@@ -106,7 +106,7 @@ const HeroSlider = () => {
                               className="bg-orange-500 h-2.5 rounded-full"
                               style={{
                                 width: `${Math.round(
-                                  (Math.round(data?.minimum_amount?.$numberDecimal) / Math.round(data?.target_amount?.$numberDecimal)) * 100||0
+                                  (Math.round(data?.raised_amount?.$numberDecimal) / Math.round(data?.target_amount?.$numberDecimal)) * 100||0
                                 )}%`,
                               }}
                             ></div>

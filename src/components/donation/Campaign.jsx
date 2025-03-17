@@ -23,6 +23,13 @@ const CampaignPage = () => {
   const [images, setImages] = useState([]);
   const [campaign, setCampaign] = useState();
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  const target = parseFloat(campaign?.target_amount?.$numberDecimal) || 10000;
+  const initial = parseFloat(campaign?.raised_amount?.$numberDecimal) || 0;
+  const [amount, setAmount] = useState(initial);
+
+  const handleSliderChange = (e) => {
+    setAmount(parseInt(e.target.value, 10));
+  };
   const openShareModal = () => setIsShareModalVisible(true);
   const closeShareModal = () => setIsShareModalVisible(false);
 
@@ -107,12 +114,12 @@ const CampaignPage = () => {
     }
   }, [paginationRef]);
   return (
-    <div className="w-full lg:w-[1300px] mx-auto p-4 mt-12 ">
+    <div className="w-full lg:w-[1300px] mx-auto p-4 mt-16 ">
       {/* Top Title Section */}
-      <div className="text-center my-4">
+      {/* <div className="text-center my-4">
         <h1 className="text-[20px] capitalize md:text-2xl font-bold">
           {campaign?.campaign_title || "Campaign Title"}
-        </h1>
+        </h1> */}
         {/* <p className="text-blue-600 mt-2">
           Campaign by
           <span className="font-bold ml-1">
@@ -122,12 +129,12 @@ const CampaignPage = () => {
         {/* <span className="inline-block bg-blue-100 text-blue-500 px-3 py-1 rounded-full text-sm mt-4">
           {campaign?.beneficiary || "Category"}
         </span> */}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-8 min-h-screen px-4 md:px-8 bg-gray-50 py-6">
+      {/* </div> */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-8 min-h-screen md:px-4 bg-white">
         {/* Left Column - Images & Content */}
         <div className="md:col-span-3">
           {/* Image Carousel */}
-          <div className="relative w-full rounded-xl shadow-lg overflow-hidden">
+          <div className="relative w-full rounded-lg overflow-hidden">
             {campaign?.other_pictures?.length > 0 ? (
               <Swiper
                 slidesPerView={1}
@@ -144,10 +151,10 @@ const CampaignPage = () => {
                     <img
                       src={image}
                       alt={`Slide ${i + 1}`}
-                      className="w-full h-[280px] md:h-[420px] object-cover rounded-xl transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-[200px] md:h-[380px] object-cover rounded transition-transform duration-3000"
                     />
                     {/* Overlay Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent opacity-40"></div>
+                    {/* <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent opacity-40"></div> */}
                   </SwiperSlide>
                 ))}
               </Swiper>
@@ -155,51 +162,83 @@ const CampaignPage = () => {
               <p className="text-center text-gray-500">No images available</p>
             )}
           </div>
-
-          {/* Donation Box (Mobile View) */}
-          <div className="bg-white p-6 rounded-xl shadow-md text-center mt-6 md:hidden">
-            <h2 className="text-3xl font-extrabold bg-gradient-to-r from-green-400 to-blue-500 text-transparent bg-clip-text">
-              ₹{campaign?.minimum_amount?.$numberDecimal || "0"}
+          
+          <div className="w-full  bg-white backdrop-blur-md px-4 p-4 rounded-lg mt-2 shadow-xl text-center md:hidden">
+             <div className="text-center my-4 border-b border-gray-400">
+        <h1 className="text-[20px] capitalize md:text-2xl font-bold mb-2">
+          {campaign?.campaign_title || "Campaign Title"}
+        </h1>
+        </div>
+            <h2 className="text-4xl font-extrabold text-[#d8573e] animate-pulse">
+              ₹{campaign?.raised_amount?.$numberDecimal || "0"}
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-700 font-semibold mt-2 text-lg">
               Raised of ₹{campaign?.target_amount?.$numberDecimal || "0"}
             </p>
 
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 h-3 rounded-full mt-3">
-              <div
-                className="h-3 bg-green-500 rounded-full transition-all duration-500"
-                style={{
-                  width: `${
-                    (campaign?.minimum_amount?.$numberDecimal /
-                      campaign?.target_amount?.$numberDecimal) *
-                      100 || 0
-                  }%`,
-                }}
-              ></div>
+            {/* Donate Button */}
+            {/* <div className="mt-6">
+              <button
+                onClick={openDonationModal}
+                className="bg-[#b3e5fc] text-blue-500 font-bold text-sm px-3 py-2 rounded-full shadow-md transition duration-300 transform hover:scale-110 hover:bg-blue-500 group animate-bounce"
+              >
+                <span className="group-hover:text-white transition duration-300">
+                  💙 DONATE NOW
+                </span>
+              </button>
+            </div> */}
+
+            {/* Share Section */}
+            <div className="mt-4 flex flex-col items-center">
+              <p className="text-gray-500 text-sm">Want to spread the word?</p>
+              <button
+                onClick={openShareModal}
+                className="mt-2 text-blue-700 font-semibold hover:underline hover:text-blue-900 transition duration-200"
+              >
+                Share this Campaign
+              </button>
             </div>
-
-            <button
-              onClick={openDonationModal}
-              className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 mt-4 rounded-full font-bold shadow-lg w-full transition-all duration-300"
-            >
-              DONATE NOW
-            </button>
-
-            <button
-              onClick={openShareModal}
-              className="text-blue-500 underline mt-3 block text-sm"
-            >
-              Share this Campaign
-            </button>
           </div>
+          <div className="w-full bg-white backdrop-blur-md p-4 md:p-6 mt-4  block md:hidden rounded-lg border border-gray-200">
+  <div className="max-w-md md:max-w-none mx-auto">
+    <h3 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
+      Campaign Details
+    </h3>
+    <hr className="my-3" />
 
+    <ul className="space-y-4">
+      <li className="flex items-center space-x-3">
+        <div className="bg-yellow-500 text-white uppercase w-10 h-10 md:w-12 md:h-12 flex justify-center items-center rounded-full font-bold shadow-md">
+          {campaign?.ngo_name?.charAt(0)}
+        </div>
+        <div>
+          <p className="text-gray-900 font-semibold capitalize md:text-lg">
+            {campaign?.ngo_name || "NGO Name"}
+          </p>
+          <p className="text-gray-500 text-sm">Beneficiary</p>
+        </div>
+      </li>
+
+      <li className="flex items-center space-x-3">
+        <div className="bg-green-500 text-white uppercase w-10 h-10 md:w-12 md:h-12 flex justify-center items-center rounded-full font-bold shadow-md">
+          {campaign?.state?.charAt(0)}
+        </div>
+        <div>
+          <p className="text-gray-900 font-semibold capitalize md:text-lg">
+            {campaign?.state}
+          </p>
+          <p className="text-gray-500 text-sm">Location</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
           {/* Description Section */}
-          <div className="bg-white p-5 rounded-xl shadow-md mt-6">
+          <div className="bg-white rounded-xl shadow-md mt-6">
             <h3 className="text-lg font-semibold text-center bg-blue-500 text-white py-3 rounded-t-xl">
               Story & Updates
             </h3>
-            <div className="text-gray-700 p-2 leading-relaxed">
+            <div className="text-gray-700 p-2 leading-snug">
               <div
                 dangerouslySetInnerHTML={{
                   __html: showFullStory
@@ -222,7 +261,7 @@ const CampaignPage = () => {
           {campaign?.video_link && (
             <div
               dangerouslySetInnerHTML={{ __html: campaign?.video_link }}
-              className="w-full h-[250px] md:h-[380px] mt-6 rounded-lg overflow-hidden shadow-lg transition-all hover:scale-105"
+              className="w-full h-[200px] md:h-[380px] mt-6 rounded-lg overflow-hidden shadow-lg transition-all"
             />
           )}
 
@@ -232,31 +271,75 @@ const CampaignPage = () => {
             <FAQ />
           </div>
         </div>
+        {/* Right Column*/}
         <div
-          className="md:col-span-2 md:h-[80vh] flex flex-col items-center justify-center p-6 rounded-lg shadow-lg"
+  className="md:col-span-2 md:h-[85vh] flex flex-col items-center justify-center"
+  style={{
+    position: "sticky",
+    top: "70px",
+  }}
+>
+          {/* Donation Card */}
+          <div className="w-full bg-white backdrop-blur-md p-6 rounded-lg text-center hidden md:block border border-gray-200">
+          <div className="text-start border-b border-gray-200">
+
+        <h1 className="text-[10px] capitalize md:text-xl font-bold mb-4">
+          {campaign?.campaign_title || "Campaign Title"}
+        </h1>
+        </div>
+        <div className="w-full">
+      {/* Editable Amount */}
+      <div className="flex justify-center items-center mb-2">
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="text-4xl font-extrabold text-[#d8573e] text-center bg-transparent focus:outline-none w-40"
+        />
+      </div>
+
+      {/* Raised of Target */}
+      <p className="text-gray-700 font-semibold mb-4 text-center text-lg">
+        Raised of ₹{target}
+      </p>
+
+      {/* Custom Slider */}
+      <div className="relative w-full">
+        <input
+          type="range"
+          min="0"
+          max={target}
+          value={amount}
+          onChange={handleSliderChange}
+          className="w-full h-2 appearance-none bg-gray-200 rounded-full"
+          style={{ WebkitAppearance: "none" }}
+        />
+        {/* Custom Heart Icon as handle */}
+        <div
+          className="absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2"
           style={{
-            position: "sticky",
-            top: "80px",
-            background: "linear-gradient(135deg, #e0f7fa, #b3e5fc)", // Light Blue Gradient
+            left: `${(amount / target) * 100}%`,
           }}
         >
-          {/* Donation Card */}
-          <div className="w-full max-w-md bg-white/70 backdrop-blur-md p-6 rounded-lg shadow-xl text-center">
-            <h2 className="text-5xl font-extrabold text-blue-600 animate-pulse">
-              ₹{campaign?.minimum_amount?.$numberDecimal || "0"}
-            </h2>
-            <p className="text-gray-700 font-semibold mt-2 text-lg">
-              Raised of ₹{campaign?.target_amount?.$numberDecimal || "0"}
-            </p>
+          <div className="w-8 h-8 bg-[#001f3f] rounded-full flex items-center justify-center shadow-lg">
+            <img
+              src="https://d2aq6dqxahe4ka.cloudfront.net/themes/neumorphism/images/igf/commonDonate/heart-icon.svg"
+              alt="Heart Icon"
+              className="w-4 h-4"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
 
             {/* Donate Button */}
             <div className="mt-6">
               <button
                 onClick={openDonationModal}
-                className="bg-[#b3e5fc] text-blue-500 font-bold text-sm px-3 py-2 rounded-full shadow-md transition duration-300 transform hover:scale-110 hover:bg-blue-500 group animate-bounce"
+                className="bg-[#d8573e] text-white font-bold text-sm px-20 py-3 rounded-full transition duration-300 transform hover:scale-110 hover:bg-[#ac4632] group animate-bounce"
               >
                 <span className="group-hover:text-white transition duration-300">
-                  💙 DONATE NOW
+                DONATE NOW
                 </span>
               </button>
             </div>
@@ -274,7 +357,7 @@ const CampaignPage = () => {
           </div>
 
           {/* Campaign Details */}
-          <div className="w-full max-w-md bg-white/80 backdrop-blur-md p-6 mt-6 rounded-lg shadow-lg border border-gray-200">
+          <div className="w-full bg-white backdrop-blur-md p-4 hidden md:block mt-10 rounded-lg border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               Campaign Details
             </h3>
@@ -322,15 +405,16 @@ const CampaignPage = () => {
         />
       )}
       <div className="visible md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full border-2 flex justify-center py-2 bg-white">
-        <button
-          onClick={openDonationModal}
-          className="bg-[#d8573e] text-white font-bold text-lg  px-6 py-2 rounded-full shadow-md w-[90%]  "
-        >
-          DONATE NOW
-        </button>
+      <button
+                onClick={openDonationModal}
+                className="bg-[#d8573e] w-[90vw]  text-white font-bold text-lg px-1 py-3 rounded-full shadow-md transition duration-300 transform hover:scale-110 hover:bg-blue-500 group "
+              >
+                <span className="group-hover:text-white transition duration-300">
+                    DONATE NOW
+                </span>
+              </button>
       </div>
     </div>
   );
 };
-
 export default CampaignPage;

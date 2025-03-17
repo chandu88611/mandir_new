@@ -1,0 +1,32 @@
+/* Removes the default arrows from input type="number" */
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinner {
+  -moz-appearance: textfield;
+}
+
+/* Heart Handle Style */
+.heart-handle {
+  background-color: navy;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid white;
+  transition: background-color 0.3s ease;
+}
+
+/* Change heart bg color on hover/drag effect */
+.heart-handle:hover {
+  background-color: #1e3a8a; /* darker navy */
+}
+
+/* Optional: smooth slider transition */
+.transition-all {
+  transition: all 0.3s ease;
+}
