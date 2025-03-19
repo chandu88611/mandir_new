@@ -220,21 +220,21 @@ const DonationForm = ({
     setDonationAmount(value);
   };
   
-  const handleSliderChange = (e) => {
-    let value = parseInt(e.target.value);
-    if (value < 200) value = 200;
-    setDonationAmount(value);
-  };
+  // const handleSliderChange = (e) => {
+  //   let value = parseInt(e.target.value);
+  //   if (value < 200) value = 200;
+  //   setDonationAmount(value);
+  // };
 
-  const handleMouseMove = (e) => {
-    if (isDragging && trackRef) {
-      const rect = trackRef.getBoundingClientRect();
-      const x = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
-      const percent = x / rect.width;
-      const value = Math.round(percent * (target - minAmount) + minAmount);
-      setDonationAmount(value);
-    }
-  };
+  // const handleMouseMove = (e) => {
+  //   if (isDragging && trackRef) {
+  //     const rect = trackRef.getBoundingClientRect();
+  //     const x = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
+  //     const percent = x / rect.width;
+  //     const value = Math.round(percent * (target - minAmount) + minAmount);
+  //     setDonationAmount(value);
+  //   }
+  // };
   
 
   const triggerRazorpay = (orderData, donationId) => {
@@ -555,37 +555,39 @@ const handleOtpModalClose = () => {
   aria-labelledby="otp-modal"
   className="flex justify-center items-center"
 >
-        <div className="p-6 bg-white rounded-lg shadow-lg max-w-sm w-full ">
-          <h2 className="text-xl font-semibold mb-6">Verify OTP</h2>
-          <p className="text-sm mb-4 text-gray-600">Sent to +91{userData.phone}</p>
+  <div className="p-6 bg-white rounded-lg shadow-lg max-w-sm w-full flex flex-col items-center text-center">
+    <h2 className="text-xl font-semibold mb-4">Verify OTP</h2>
+    <p className="text-sm mb-4 text-gray-600">Sent to +91{userData.phone}</p>
 
-          <input
-            type="text"
-            className="w-full p-3 mb-6 border rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
-            placeholder="Enter OTP"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            required
-          />
-          <button
+    <input
+      type="text"
+      className="w-full p-3 mb-4 border rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
+      placeholder="Enter OTP"
+      value={otp}
+      onChange={(e) => setOtp(e.target.value)}
+      required
+    />
+    <button
       className="bg-[#ffdd04] text-black font-bold py-2 w-full rounded-lg mb-2"
       onClick={handleOtpSubmit}
     >
       VERIFY
     </button>
-     {/* Resend OTP with countdown */}
-     {timer > 0 ? (
-  <p className="text-xs text-gray-500">RESEND OTP ({timer}s)</p>
-) : (
-  <button
-    onClick={handleResendOtp}
-    className="text-xs text-[#8d7f24] font-medium"
-  >
-    RESEND OTP
-  </button>
-)}
-  {/* Terms & Privacy */}
-  <p className="text-[10px] text-gray-400 mt-3">
+
+    {/* Resend OTP with countdown */}
+    {timer > 0 ? (
+      <p className="text-xs text-gray-500">RESEND OTP ({timer}s)</p>
+    ) : (
+      <button
+        onClick={handleResendOtp}
+        className="text-xs text-[#8d7f24] font-medium"
+      >
+        RESEND OTP
+      </button>
+    )}
+
+    {/* Terms & Privacy */}
+    <p className="text-[10px] text-gray-400 mt-3">
       *By continuing, I agree to the{" "}
       <a href="#" className="underline">
         Terms Of Use
@@ -595,9 +597,9 @@ const handleOtpModalClose = () => {
         Privacy Policy
       </a>
     </p>
+  </div>
+</Modal>
 
-        </div>
-      </Modal>
     </div>
   );
 };
