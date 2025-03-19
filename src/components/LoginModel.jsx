@@ -84,14 +84,23 @@ const LoginModel = ({ open, onClose }) => {
     initialValues: {
       otp: "",
     },
+    validate: (values) => {
+      const errors = {};
+      if (!values.otp) {
+        errors.otp = "OTP is required";
+      } else if (values.otp.length < 6) {
+        errors.otp = "OTP must be 6 digits";
+      }
+      return errors;
+    },
     onSubmit: async (values) => {
-      const { otp } = values;
       await verifyOtp({
-        otp,
-        mobile_number: removeCountryCode(phoneForm.values?.mobile_number),
+        otp: values.otp,
+        mobile_number: removeCountryCode(phoneForm.values.mobile_number),
       });
     },
   });
+  
 
   return (
     <Dialog open={open} onClose={onClose} sx={{borderRadius:'20px' }}  className="px-18 ">
@@ -113,8 +122,8 @@ const LoginModel = ({ open, onClose }) => {
       </DialogTitle>
        
       <DialogContent>
-        <div className="flex w-full justify-center items-center space-x-2">
-          {stepCount ? (
+      <div className="flex w-full justify-center items-center space-x-2 py-2">
+      {stepCount ? (
             <CaptureOtp form={otpForm} />
           ) : (
             <CapturePhoneNumber form={phoneForm} />
@@ -138,12 +147,18 @@ const LoginModel = ({ open, onClose }) => {
           <div className="w-full flex flex-col">
           
           <Button
-            type="button"
-            onClick={() => otpForm.handleSubmit()}
-            variant="contained"
-            color="secondary"
-            className="!mx-auto !-mt-4 w-[57%]"
-          >
+  type="button"
+  onClick={() => otpForm.handleSubmit()}
+  variant="contained"
+  className="!mx-auto !-mt-4 w-[57%]"
+  sx={{
+    backgroundColor: '#ffdd04',
+    color: '#000',
+    '&:hover': {
+      backgroundColor: '#e6c703', // slightly darker on hover
+    },
+  }}
+>
             {verifyOtpLoading ? <CircularProgress size={16} /> : "Verify"}
           </Button>
           <Button
@@ -192,40 +207,21 @@ const CapturePhoneNumber = ({ form }) => {
 
 const CaptureOtp = ({ form }) => {
   return (
-    <div className="flex space-x-2">
-      {[...Array(6)].map((_, index) => (
-        <TextField
-          key={index}
-          variant="outlined"
-          inputProps={{ maxLength: 1 }}
-          onChange={(e) => {
-            const { value } = e.target;
-            if (/^\d$/.test(value)) {
-              const otpArray = form.values.otp.split('');
-              otpArray[index] = value;
-              form.setFieldValue('otp', otpArray.join(''));
-              if (value !== '' && index < 5) {
-                document.getElementById(`otp-${index + 1}`).focus();
-              }
-            }
-          }}
-          onKeyDown={(e) => {
-            const otpArray = form.values.otp.split('');
-            if (e.key === "Backspace") {
-              e.preventDefault();
-              if (otpArray[index]) {
-                otpArray[index] = '';
-                form.setFieldValue('otp', otpArray.join(''));
-              } else if (index > 0) {
-                document.getElementById(`otp-${index - 1}`).focus();
-              }
-            }
-          }}
-          value={form.values.otp[index] || ''}
-          id={`otp-${index}`}
-          style={{ width: '3rem', textAlign: 'center', padding: "1px" }}
-        />
-      ))}
+    <div className="flex justify-center items-center w-full">
+      <TextField
+        variant="outlined"
+        placeholder="Enter OTP"
+        fullWidth
+        inputProps={{ maxLength: 6, style: { padding: "8px 10px", height: "30px" } }}
+        value={form.values.otp}
+        onChange={(e) => form.setFieldValue('otp', e.target.value)}
+        error={form.touched.otp && Boolean(form.errors.otp)}
+        helperText={form.touched.otp && form.errors.otp}
+        sx={{
+          "& input": { textAlign: "center", letterSpacing: "0.3em" }
+        }}
+      />
     </div>
   );
 };
+

@@ -24,7 +24,7 @@ const CampaignPage = () => {
   const [campaign, setCampaign] = useState();
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const target = parseFloat(campaign?.target_amount?.$numberDecimal) || 10000;
-  const initial = parseFloat(campaign?.raised_amount?.$numberDecimal) || 0;
+  const initial = parseFloat(campaign?.raised_amount?.$numberDecimal) || 200;
   const [amount, setAmount] = useState(initial);
 
   const handleSliderChange = (e) => {
@@ -169,9 +169,48 @@ const CampaignPage = () => {
           {campaign?.campaign_title || "Campaign Title"}
         </h1>
         </div>
-            <h2 className="text-4xl font-extrabold text-[#d8573e] animate-pulse">
+            {/* <h2 className="text-4xl font-extrabold text-[#d8573e] animate-pulse">
               ₹{campaign?.raised_amount?.$numberDecimal || "0"}
-            </h2>
+            </h2> */}
+
+<div className="w-full">
+  <div className="flex justify-center items-center mb-6 mt-6">
+  <div className="flex items-center gap-2">
+    {/* ₹ symbol */}
+    <span className="text-4xl font-extrabold animate-pulse text-[#d8573e]">
+      ₹
+    </span>
+
+    {/* Editable input */}
+    <input
+      type="number"
+      placeholder="0"
+      value={amount === "" ? "" : amount}
+      min="0"
+      max="250000"
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value === "") {
+          setAmount("");
+        } else if (parseInt(value) <= 250000) {
+          setAmount(parseInt(value));
+        } else {
+          setAmount(250000);
+        }
+      }}
+      inputMode="numeric"
+      className="py-2 text-4xl font-extrabold text-[#d8573e] text-left bg-transparent focus:outline-none animate-pulse appearance-none 
+      [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none 
+      [-moz-appearance:textfield]"
+      style={{
+        width: `${(amount.toString().length || 1) * 1.2}ch`, // grows with length
+        transition: 'width 0.2s ease'
+      }}
+    />
+  </div>
+</div>
+</div>
+
             <p className="text-gray-700 font-semibold mt-2 text-lg">
               Raised of ₹{campaign?.target_amount?.$numberDecimal || "0"}
             </p>
@@ -279,24 +318,51 @@ const CampaignPage = () => {
     top: "70px",
   }}
 >
-          {/* Donation Card */}
-          <div className="w-full bg-white backdrop-blur-md p-6 rounded-lg text-center hidden md:block border border-gray-200">
-          <div className="text-start border-b border-gray-200">
+       {/* Donation Card */}
+       <div className="w-full bg-white backdrop-blur-md p-6 rounded-lg text-center hidden md:block border border-gray-200">
+  <div className="text-start border-b border-gray-200">
+    <h1 className="text-[10px] capitalize md:text-xl font-bold mb-4">
+      {campaign?.campaign_title || "Campaign Title"}
+    </h1>
+  </div>
 
-        <h1 className="text-[10px] capitalize md:text-xl font-bold mb-4">
-          {campaign?.campaign_title || "Campaign Title"}
-        </h1>
-        </div>
-        <div className="w-full">
-      {/* Editable Amount */}
-      <div className="flex justify-center items-center mb-2">
-        <input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="text-4xl font-extrabold text-[#d8573e] text-center bg-transparent focus:outline-none w-40"
-        />
-      </div>
+  <div className="w-full">
+  <div className="flex justify-center items-center mb-6 mt-6">
+  <div className="flex items-center gap-2">
+    {/* ₹ symbol */}
+    <span className="text-4xl font-extrabold animate-pulse text-[#d8573e]">
+      ₹
+    </span>
+
+    {/* Editable input */}
+    <input
+      type="number"
+      placeholder="0"
+      value={amount === "" ? "" : amount}
+      min="0"
+      max="250000"
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value === "") {
+          setAmount("");
+        } else if (parseInt(value) <= 250000) {
+          setAmount(parseInt(value));
+        } else {
+          setAmount(250000);
+        }
+      }}
+      inputMode="numeric"
+      className="py-2 text-4xl font-extrabold text-[#d8573e] text-left bg-transparent focus:outline-none animate-pulse appearance-none 
+      [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none 
+      [-moz-appearance:textfield]"
+      style={{
+        width: `${(amount.toString().length || 1) * 1.2}ch`, // grows with length
+        transition: 'width 0.2s ease'
+      }}
+    />
+  </div>
+</div>
+
 
       {/* Raised of Target */}
       <p className="text-gray-700 font-semibold mb-4 text-center text-lg">
@@ -304,7 +370,7 @@ const CampaignPage = () => {
       </p>
 
       {/* Custom Slider */}
-      <div className="relative w-full">
+      {/* <div className="relative w-full">
         <input
           type="range"
           min="0"
@@ -313,9 +379,9 @@ const CampaignPage = () => {
           onChange={handleSliderChange}
           className="w-full h-2 appearance-none bg-gray-200 rounded-full"
           style={{ WebkitAppearance: "none" }}
-        />
+        /> */}
         {/* Custom Heart Icon as handle */}
-        <div
+        {/* <div
           className="absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2"
           style={{
             left: `${(amount / target) * 100}%`,
@@ -327,9 +393,9 @@ const CampaignPage = () => {
               alt="Heart Icon"
               className="w-4 h-4"
             />
-          </div>
-        </div>
-      </div>
+          </div> */}
+        {/* </div> */}
+      {/* </div> */}
     </div>
 
             {/* Donate Button */}

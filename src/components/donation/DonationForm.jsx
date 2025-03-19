@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef  } from "react";
 import { Modal, Button } from "@mui/material";
 import { message } from "antd";
 import {
@@ -24,7 +24,6 @@ const DonationForm = ({
   const [verifyPayment] = useVerifyPaymentMutation(); // OTP verification mutation
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
-  console.log(user)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [donationAmount, setDonationAmount] = useState(1000);
   const [supportPercent, setSupportPercent] = useState(5);
@@ -33,9 +32,80 @@ const DonationForm = ({
   const [total, setTotal] = useState();
   const [createOrder] = useCreateOrderMutation();
   const [userData, setUserData1] = useState({
-    mobile_number: user?.userData?.mobile_number||"",
+    full_name: "",
+    email: "",
+    mobile_number: "",
   });
+  const [timer, setTimer] = useState(0);
+  const [citizenStatus, setCitizenStatus] = useState("yes");
+  const [showError, setShowError] = useState(false);
+  const [receiveUpdates, setReceiveUpdates] = useState(false);
+  const target = 250000;
+  const minAmount = 200;
+  const trackRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [percent, setPercent] = useState(0);
+  
+  const updatePosition = (e) => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+    const newPercent = (x / rect.width) * 100;
+    setPercent(newPercent);
+  
+    // Sync with donation amount
+    const value = Math.round((newPercent / 100) * (target - minAmount) + minAmount);
+    setDonationAmount(value);
+  };
+  
+  const startDrag = (e) => {
+    e.preventDefault();
+    updatePosition(e);
+    setIsDragging(true);
+  };
+  
+  useEffect(() => {
+    const handleMove = (e) => {
+      if (isDragging) {
+        updatePosition(e);
+      }
+    };
+  
+    const stopDrag = () => setIsDragging(false);
+  
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", stopDrag);
+    window.addEventListener("touchmove", handleMove, { passive: false });
+    window.addEventListener("touchend", stopDrag);
+  
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", stopDrag);
+      window.removeEventListener("touchmove", handleMove);
+      window.removeEventListener("touchend", stopDrag);
+    };
+  }, [isDragging]);
+  
+  // Optional: Sync when user types in donation input
+  useEffect(() => {
+    if (donationAmount < minAmount) {
+      setDonationAmount(minAmount);
+    }
+    const calcPercent = ((donationAmount - minAmount) / (target - minAmount)) * 100;
+    setPercent(calcPercent);
+  }, [donationAmount]);
 
+  useEffect(() => {
+    let interval;
+    if (otpModalVisible && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpModalVisible, timer]);
+  
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
@@ -47,25 +117,38 @@ const DonationForm = ({
     return donationAmount + (donationAmount * supportPercent) / 100;
   };
 
+  const validateForm = () => {
+    if (!citizenStatus) {
+      setShowError(true);
+      return false;
+    }
+    setShowError(false);
+    return true;
+  };
+
   const handleDonateNow = async () => {
     if (!isLoggedIn) {
-      if (  !userData.mobile_number) {
+      if (!userData.full_name || !userData.email || !userData.mobile_number) {
         message.error("Please fill in all required fields.");
         return;
       }
-
-      // Call the login API to send OTP
+      if (!citizenStatus) {
+        setShowError(true);
+        return;
+      }
+  
       try {
         const response = await loginUser({
           name: userData.full_name,
           email: userData.email,
           mobile_number: userData.mobile_number,
         }).unwrap();
-
-        // OTP sent successfully, open OTP modal
+  
         message.success(response.message);
-
+  
+        // Hide donation modal & open OTP modal with timer
         setOtpModalVisible(true);
+        setTimer(30);
       } catch (error) {
         message.error(error.data?.error || "Error sending OTP.");
       }
@@ -75,11 +158,11 @@ const DonationForm = ({
       handleClose();
     }
   };
-  console.log(userData);
+    console.log(userData);
   // Function to handle OTP form submission
   const handleOtpSubmit = async () => {
     if (otp.length === 6) {
-   
+      // Call the verify OTP API
       try {
         const response = await verifyOtp({
           mobile_number: userData.mobile_number,
@@ -88,7 +171,7 @@ const DonationForm = ({
 
         // OTP verified successfully, log in the user
         message.success(response.data.message);
-         
+        console.log(response);
         localStorage.setItem("authToken", response.data.token);
         setUserData1(response.data.user);
         dispatch(setUserData(response.data.user));
@@ -125,25 +208,54 @@ const DonationForm = ({
     }
   };
 
+  const handlePresetClick = (value) => {
+    setDonationAmount(value);
+  };
+
+  const handleInputChange = (e) => {
+    let value = parseInt(e.target.value);
+    if (isNaN(value)) value = 200;
+    if (value < 200) value = 200;
+    if (value > target) value = target;
+    setDonationAmount(value);
+  };
+  
+  const handleSliderChange = (e) => {
+    let value = parseInt(e.target.value);
+    if (value < 200) value = 200;
+    setDonationAmount(value);
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDragging && trackRef) {
+      const rect = trackRef.getBoundingClientRect();
+      const x = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
+      const percent = x / rect.width;
+      const value = Math.round(percent * (target - minAmount) + minAmount);
+      setDonationAmount(value);
+    }
+  };
+  
+
   const triggerRazorpay = (orderData, donationId) => {
     const options = {
-      key: "rzp_live_qMGIKf7WORiiuM",  
+      key: "rzp_live_qMGIKf7WORiiuM", // Add your Razorpay Key ID
       amount: calculateTotal(),
       currency: "INR",
       name: "Giveaze",
       description: "Donation Payment",
-      order_id: orderData.id,  
+      order_id: orderData.id, // Razorpay Order ID
       handler: async function (response) {
- 
+        console.log(response);
         try {
-        
+          // 3️⃣ Verify payment with backend
           const verifyResponse = await verifyPayment({
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
             donation_campaign_id: donation_campaign_id,
             user_id: user?.userData?._id,
-            amount: calculateTotal()
+            amount: calculateTotal(),
           }).unwrap();
 
           if (verifyResponse.success) {
@@ -152,10 +264,7 @@ const DonationForm = ({
             setTimeout(() => {
               window.location.reload();
             }, 2000);
-           } else {
-            setTimeout(() => {
-              window.location.reload();
-            }, 2000);
+          } else {
             message.error("Payment verification failed.");
           }
         } catch (error) {
@@ -175,7 +284,25 @@ const DonationForm = ({
     const razorpayInstance = new window.Razorpay(options);
     razorpayInstance.open();
   };
-  console.log(userData)
+  const handleResendOtp = async () => {
+  try {
+    const response = await loginUser({
+      name: userData.full_name,
+      email: userData.email,
+      mobile_number: userData.mobile_number,
+    }).unwrap();
+
+    message.success("OTP resent successfully.");
+    setTimer(30); // Restart the timer after resend
+  } catch (error) {
+    message.error(error.data?.error || "Error resending OTP.");
+  }
+};
+const handleOtpModalClose = () => {
+  setOtpModalVisible(false);
+  setTimer(0); // Reset timer to avoid blocking logic
+};
+
 
   return (
     <div>
@@ -184,39 +311,40 @@ const DonationForm = ({
         open={open}
         onClose={handleClose}
         aria-labelledby="donation-modal"
-        className="flex justify-center items-end md:items-center "
+        className="flex justify-center items-end md:items-center"
       >
-        <div className="relative bg-white px-6 pt-5 pb-6 rounded-lg shadow-lg max-w-3xl w-full md:flex">
+       <div className="relative bg-white md:px-6 px-3 md:pt-5 pt-2 md:pb-6 pb-2 rounded-lg shadow-lg max-w-3xl w-full md:flex">
           {/* Close Button (Top Right) */}
           <button
             onClick={handleClose}
             className="absolute top-3 right-3 text-gray-600 hover:text-red-500 transition duration-200"
           >
-            <IoClose size={"30px"} />
-          </button>
+          <IoClose className="text-2xl md:text-3xl" />
+        </button>
 
           {/* Left Column - Your Information */}
-          <div className="md:w-1/2 p-4 border-r border-gray-200">
-            <h2 className="text-xl font-semibold mb-6">Your Information</h2>
+          <div className="md:w-1/2 md:p-4 p-2 border-b border-gray-300 md:border-b-0 md:border-r md:border-gray-200">
+          <h2 className="text-xl font-semibold md:mb-6 mb-3">Your Information</h2>
 
             {!isLoggedIn ? (
               <>
                 {/* Full Name */}
-                 <input
-                  type="text"
-                  className="w-full p-3 mb-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
-                  placeholder="Full Name"
-                  value={userData.full_name}
-                  onChange={(e) =>
-                    setUserData1({ ...userData, full_name: e.target.value })
-                  }
-                  required
-                /> 
+                <input
+  type="text"
+  className="w-full md:p-2 p-1 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition placeholder:text-xs md:mb-4 mb-3"
+  placeholder="Full Name"
+  value={userData.full_name}
+  onChange={(e) =>
+    setUserData1({ ...userData, full_name: e.target.value })
+  }
+  required
+/>
+
 
                 {/* Email Address */}
                 <input
                   type="email"
-                  className="w-full p-3 mb-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
+                  className="w-full md:p-2 p-1 md:mb-4 mb-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition placeholder:text-xs"
                   placeholder="Email Address"
                   value={userData.email}
                   onChange={(e) =>
@@ -226,14 +354,15 @@ const DonationForm = ({
                 />
 
                 {/* Phone Number */}
-                <div className="flex gap-4 mb-2">
-                  <select className="w-1/3 p-3 border rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition">
+                <div className="flex gap-4 md:mb-4 mb-1">
+                  <select className="md:w-1/3 w-1/2 md:p-2 p-1 text-xs border rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition">
                     <option value="+91">+91</option>
+                    <option value="+1">+1</option>
                   </select>
 
                   <input
                     type="tel"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
+                    className="w-full md:p-2 p-1 border border-gray-300 rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition placeholder:text-xs"
                     placeholder="Phone Number"
                     value={userData.mobile_number}
                     onChange={(e) =>
@@ -245,39 +374,97 @@ const DonationForm = ({
                     required
                   />
                 </div>
+                
+        {/* Citizenship Question */}
+        <div className="md:mt-6 md:mt-4 mt-3">
+          <p className="md:mb-3 mb-1 mt-2 md:mt-1 md:text-sm text-xs">Are you an Indian Citizen? <sup>*</sup></p>
+          <div className="flex space-x-6">
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="is_indian_national"
+                value="yes"
+                checked={citizenStatus === "yes"}
+                onChange={() => setCitizenStatus("yes")}
+              />
+              <span className="md:text-sm text-xs">Yes</span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="is_indian_national"
+                value="no"
+                checked={citizenStatus === "no"}
+                onChange={() => setCitizenStatus("no")}
+              />
+              <span className="md:text-sm text-xs">No</span>
+            </label>
+          </div>
+          {showError && (
+            <small className="text-red-500">Please select your citizenship</small>
+          )}
+        </div>
+      {/* Receive Transaction Updates */}
+<div className="md:mt-3 mt-2 flex items-start space-x-2">
+  <input
+    type="checkbox"
+    id="receive_updates"
+    className="mt-0.5"
+    checked={receiveUpdates}
+    onChange={(e) => setReceiveUpdates(e.target.checked)}
+  />
+  <label htmlFor="receive_updates" className="text-xs text-gray-400 leading-snug opacity-70">
+  I want to receive transaction updates / alerts from Impact Giveaze Foundation
+</label>
+
+</div>
+
+{/* Disclaimer for Privacy Policy & Terms */}
+<p className="text-[10px] text-gray-500 md:mt-6 mt-4">
+  By proceeding, you are agreeing to Impact Giveaze Foundation's{" "}
+  <a href="/privacy-policy" className="text-[#8d7f24] underline" target="_blank" rel="noopener noreferrer">
+    Privacy Policy
+  </a>{" "}
+  and{" "}
+  <a href="/terms-and-conditions" className="text-[#8d7f24] underline" target="_blank" rel="noopener noreferrer">
+    Terms & Conditions
+  </a>.
+</p>
+
               </>
             ) : (
               <>
                 {/* Show User's Information When Logged In */}
 
                 <p className="mb-4 text-lg font-medium">
-                  👤 {user.userData.full_name||userData.full_name}
+                  👤 {userData.full_name}
                 </p>
-                <p className="mb-4 text-lg font-medium">📧 {user.userData.email||userData.email}</p>
+                <p className="mb-4 text-lg font-medium">📧 {userData.email}</p>
                 <p className="mb-4 text-lg font-medium">
                   📞 {userData.mobile_number}
                 </p>
               </>
             )}
+            
           </div>
 
           {/* Right Column - Donation Details */}
-          <div className="md:w-1/2 p-4 flex flex-col justify-between">
-            <h3 className="text-lg font-semibold mb-6">Donation Amount</h3>
+          <div className="md:w-1/2 md:p-3 p-2 flex flex-col justify-between">
+            <h3 className="text-lg font-semibold md:mb-3 mb-1">Donation Amount</h3>
 
             {/* Select Amount Header */}
-            <h4 className="font-semibold mb-2 text-left">Select Amount</h4>
+            <h4 className="text-base font-semibold md:mb-1 mb-2 text-left">Select Amount</h4>
 
-            <div className="grid grid-cols-3 gap-3 mb-6">
+                      <div className="grid grid-cols-3 gap-2 mb-4">
               {[500, 1500, 3000].map((amount) => (
                 <button
                   key={amount}
-                  className={`py-2 px-4 rounded-lg ${
+                  className={`p-1 rounded-lg text-xs ${
                     donationAmount === amount
                       ? "bg-[#ffdd04] text-black"
                       : "border border-[#8d7f24] text-[#8d7f24]"
                   }`}
-                  onClick={() => setDonationAmount(amount)}
+                  onClick={() => handlePresetClick(amount)}
                 >
                   ₹ {amount}
                 </button>
@@ -285,18 +472,55 @@ const DonationForm = ({
             </div>
 
             <input
-              type="number"
-              className="w-full p-3 mb-6 border rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
-              placeholder="Other amount - Rs 300 & more"
-              value={donationAmount}
-              onChange={(e) => setDonationAmount(parseInt(e.target.value))}
-            />
+  type="number"
+  className="w-full p-2 md:mb-4 mb-3 text-xs border rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
+  placeholder="Other amount - Rs 300 & more"
+  value={donationAmount}
+  onChange={handleInputChange}
+/>
+{/* Progress Track */}
+<div
+      ref={trackRef}
+      className="relative w-[95%] ml-3 h-1 mt-1 bg-gray-200 rounded-full select-none"
+      onMouseDown={startDrag}
+      onTouchStart={startDrag}
+    >
+      {/* Progress Fill */}
+      <div
+        className={`absolute top-0 left-0 h-1 bg-[#ff4757] rounded-full ${
+          isDragging ? "" : "transition-all duration-200"
+        }`}
+        style={{ width: `${percent}%` }}
+      ></div>
 
-            {/* Support Us Section */}
-            <div className="mb-6">
-              <h3 className="font-semibold mb-3">Support Us</h3>
+      {/* Heart Button */}
+      <div
+        className={`absolute top-1/2 -translate-y-1/2 cursor-pointer z-20 ${
+          isDragging ? "" : "transition-all duration-200"
+        }`}
+        style={{
+          left: `${percent}%`,
+          transform: "translate(-50%, -50%)",
+        }}
+        onMouseDown={startDrag}
+        onTouchStart={startDrag}
+      >
+        <div className="w-6 h-6 bg-white border-2 border-[#ff4757] rounded-full flex items-center justify-center shadow">
+          <img
+            src="/images/heart-icon.svg"
+            alt="Heart"
+            className="w-3 h-3"
+            draggable={false}
+          />
+        </div>
+      </div>
+    </div>
+
+           {/* Support Us Section */}
+            <div className="md:mb-4 mb-2 mt-4">
+              <h3 className="text-base font-semibold md:mb-2 mb-1">Support Us</h3>
               <select
-                className="w-full p-3 border rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
+                className="w-full p-2 border rounded-lg text-xs focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
                 value={supportPercent}
                 onChange={(e) => setSupportPercent(e.target.value)}
               >
@@ -307,16 +531,17 @@ const DonationForm = ({
               </select>
             </div>
 
-            <h3 className="font-semibold mb-6 text-left">
+            <h3 className="text-base font-semibold md:mb-4 mb-1 text-left">
               Total Donation: ₹ {calculateTotal()}
             </h3>
-            <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+            <div className="flex justify-center">
               <button
-                className="px-20 py-3 md:py-3 text-lg md:text-base font-semibold text-white bg-[#d8573e] rounded-full 
-               shadow-md transition-all duration-300 hover:bg-[#ac4632] hover:shadow-lg"
+                className="px-16 py-3 text-sm mt-3 font-semibold text-white bg-[#d8573e] rounded-full
+               shadow-md transition-all duration-300 hover:bg-[#a84430] hover:shadow-lg"
                 onClick={handleDonateNow}
-              >Proceed to Pay
-                <span> ₹ {calculateTotal()}</span>
+              >
+                Proceed to Pay
+                <span className="ml-2">₹ {calculateTotal()}</span>
               </button>
             </div>
           </div>
@@ -324,64 +549,55 @@ const DonationForm = ({
       </Modal>
 
       {/* OTP Modal */}
-     {/* OTP Modal */}
-<Modal
+      <Modal
   open={otpModalVisible}
-  onClose={() => setOtpModalVisible(false)}
+  onClose={handleOtpModalClose}
   aria-labelledby="otp-modal"
   className="flex justify-center items-center"
 >
-  <div className="p-6 bg-white rounded-2xl shadow-2xl w-full max-w-sm space-y-5">
-    {/* Modal Title */}
-    <div className="text-center">
-      <h2 className="text-2xl font-bold text-gray-900">Verify OTP</h2>
-      <p className="text-sm text-gray-600 mt-1">
-        Sent to {phoneNumber || "+91XXXXXXXXXX"}
-      </p>
-    </div>
+        <div className="p-6 bg-white rounded-lg shadow-lg max-w-sm w-full ">
+          <h2 className="text-xl font-semibold mb-6">Verify OTP</h2>
+          <p className="text-sm mb-4 text-gray-600">Sent to +91{userData.phone}</p>
 
-    {/* OTP Input */}
-    <input
-      type="text"
-      className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8d7f24] focus:border-transparent transition"
-      placeholder="Enter OTP"
-      value={otp}
-      onChange={(e) => setOtp(e.target.value)}
-      maxLength={6}
-      required
-    />
-
-    {/* Resend OTP Section */}
-    <div className="text-center text-sm text-gray-600">
-      {sendOtpInSeconds > 0 ? (
-        <p>Resend OTP in <span className="font-semibold">{sendOtpInSeconds}s</span></p>
-      ) : (
-        <button
-          onClick={handleResendOtp}
-          className="text-[#8d7f24] font-semibold hover:underline"
-        >
-          Resend OTP
-        </button>
-      )}
-    </div>
-
-    {/* Submit Button */}
-    <button
-      className="bg-[#ffdd04] hover:bg-[#e6c903] transition text-black font-bold py-3 px-6 rounded-lg w-full"
+          <input
+            type="text"
+            className="w-full p-3 mb-6 border rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            required
+          />
+          <button
+      className="bg-[#ffdd04] text-black font-bold py-2 w-full rounded-lg mb-2"
       onClick={handleOtpSubmit}
     >
-      Submit OTP
+      VERIFY
     </button>
-
-    {/* Terms */}
-    <p className="text-xs text-center text-gray-500 leading-relaxed">
-      By continuing, you agree to our{" "}
-      <a href="/terms" className="underline hover:text-black">Terms</a> and{" "}
-      <a href="/privacy-policy" className="underline hover:text-black">Privacy Policy</a>.
+     {/* Resend OTP with countdown */}
+     {timer > 0 ? (
+  <p className="text-xs text-gray-500">RESEND OTP ({timer}s)</p>
+) : (
+  <button
+    onClick={handleResendOtp}
+    className="text-xs text-[#8d7f24] font-medium"
+  >
+    RESEND OTP
+  </button>
+)}
+  {/* Terms & Privacy */}
+  <p className="text-[10px] text-gray-400 mt-3">
+      *By continuing, I agree to the{" "}
+      <a href="#" className="underline">
+        Terms Of Use
+      </a>{" "}
+      and{" "}
+      <a href="#" className="underline">
+        Privacy Policy
+      </a>
     </p>
-  </div>
-</Modal>
 
+        </div>
+      </Modal>
     </div>
   );
 };
