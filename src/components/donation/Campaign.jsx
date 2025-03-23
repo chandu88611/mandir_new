@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-
 import { Swiper, SwiperSlide } from "swiper/react";
 import {
   useLazyGetCampaignQuery,
@@ -10,28 +9,78 @@ import { useParams } from "react-router-dom";
 import "swiper/css";
 import DonationForm from "./DonationForm";
 import { useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+ 
 
 // import 'swiper/css/navigation';
 import "swiper/css/pagination";
 import FAQ from "../FAQAccordian";
 import ShareCampaignModal from "./ShareCampaign";
+import LoginModel from "../LoginModel";
 
 const CampaignPage = () => {
   const [currentSlide, setCurrentSlide] = useState(1);
+  const [donationuser,setDonationuser]=useState()
   const { id } = useParams();
   const [get, { data, error, isLoading }] = useLazyGetCampaignQuery();
   const [images, setImages] = useState([]);
   const [campaign, setCampaign] = useState();
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const target = parseFloat(campaign?.target_amount?.$numberDecimal) || 10000;
-  const initial = parseFloat(campaign?.raised_amount?.$numberDecimal) || 200;
+  const initial = parseFloat(campaign?.raised_amount?.$numberDecimal) || 0;
   const [amount, setAmount] = useState(initial);
+  const storyRef = useRef(null);
+  const updatesRef = useRef(null);
+  const [showNav, setShowNav] = useState(false);
+  const [isDonationModalVisible, setIsDonationModalVisible] = useState(false);
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+  const [shouldTriggerDonation, setShouldTriggerDonation] = useState(false);
+
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  const dispatch = useDispatch();
 
   const handleSliderChange = (e) => {
     setAmount(parseInt(e.target.value, 10));
   };
   const openShareModal = () => setIsShareModalVisible(true);
   const closeShareModal = () => setIsShareModalVisible(false);
+ 
+
+  const handleDonateClick = () => {
+    if (isLoggedIn) {
+      setIsDonationModalVisible(true);
+    } else {
+      setShouldTriggerDonation(true);
+      setIsLoginModalVisible(true);
+    }
+  };
+
+  
+
+  const closeDonationModal = () => {
+    setIsDonationModalVisible(false);
+  };
+
+  // Handle scroll to show nav after user scrolls down
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      if (scrollPosition > 300) {
+        setShowNav(true);
+      } else {
+        setShowNav(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToSection = (ref) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -98,14 +147,14 @@ const CampaignPage = () => {
   // const campaign =  || {};
 
   // const images =   [campaign?.main_picture , ...campaign?.other_pictures]
-  const [isDonationModalVisible, setIsDonationModalVisible] = useState(false);
+  // const [isDonationModalVisible, setIsDonationModalVisible] = useState(false);
   const openDonationModal = () => {
     setIsDonationModalVisible(true);
   };
 
-  const closeDonationModal = () => {
-    setIsDonationModalVisible(false);
-  };
+  // const closeDonationModal = () => {
+  //   setIsDonationModalVisible(false);
+  // };
   const paginationRef = useRef(null);
   const [showFullStory, setShowFullStory] = useState(false);
   useEffect(() => {
@@ -113,6 +162,23 @@ const CampaignPage = () => {
       paginationRef.current.classList.add("custom-swiper-pagination");
     }
   }, [paginationRef]);
+
+  const handleNativeShare = () => {
+    if (navigator.share) {
+      navigator
+        .share({
+          title: "Support this campaign!",
+          url: window.location.href,
+        })
+        .then(() => console.log("Shared successfully"))
+        .catch((err) => console.log("Sharing failed", err));
+    } else {
+      alert(
+        "Sharing is only available on mobile devices with supported browsers."
+      );
+    }
+  };
+console.log(donationuser)
   return (
     <div className="w-full lg:w-[1300px] mx-auto p-4 mt-16 ">
       {/* Top Title Section */}
@@ -120,13 +186,13 @@ const CampaignPage = () => {
         <h1 className="text-[20px] capitalize md:text-2xl font-bold">
           {campaign?.campaign_title || "Campaign Title"}
         </h1> */}
-        {/* <p className="text-blue-600 mt-2">
+      {/* <p className="text-blue-600 mt-2">
           Campaign by
           <span className="font-bold ml-1">
             {campaign?.ngo_name || "Organizer"}
           </span>
         </p> */}
-        {/* <span className="inline-block bg-blue-100 text-blue-500 px-3 py-1 rounded-full text-sm mt-4">
+      {/* <span className="inline-block bg-blue-100 text-blue-500 px-3 py-1 rounded-full text-sm mt-4">
           {campaign?.beneficiary || "Category"}
         </span> */}
       {/* </div> */}
@@ -162,27 +228,27 @@ const CampaignPage = () => {
               <p className="text-center text-gray-500">No images available</p>
             )}
           </div>
-          
+
           <div className="w-full  bg-white backdrop-blur-md px-4 p-4 rounded-lg mt-2 shadow-xl text-center md:hidden">
-             <div className="text-center my-4 border-b border-gray-400">
-        <h1 className="text-[20px] capitalize md:text-2xl font-bold mb-2">
-          {campaign?.campaign_title || "Campaign Title"}
-        </h1>
-        </div>
-            {/* <h2 className="text-4xl font-extrabold text-[#d8573e] animate-pulse">
-              ₹{campaign?.raised_amount?.$numberDecimal || "0"}
-            </h2> */}
+            <div className="text-center my-4 border-b border-gray-400">
+              <h1 className="text-[20px] capitalize md:text-2xl font-bold mb-2">
+                {campaign?.campaign_title || "Campaign Title"}
+              </h1>
+            </div>
 
-<div className="w-full">
-  <div className="flex justify-center items-center mb-6 mt-6">
-  <div className="flex items-center gap-2">
-    {/* ₹ symbol */}
-    <span className="text-4xl font-extrabold animate-pulse text-[#d8573e]">
+            <div className="w-full">
+              <div className="flex justify-center items-center mb-6 mt-6">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-4xl font-extrabold text-[#d8573e] animate-pulse">
+                    ₹ {campaign?.raised_amount?.$numberDecimal || "0"}
+                  </h2>
+                  {/* ₹ symbol */}
+                  {/* <span className="text-4xl font-extrabold animate-pulse text-[#d8573e]">
       ₹
-    </span>
+    </span> */}
 
-    {/* Editable input */}
-    <input
+                  {/* Editable input */}
+                  {/* <input
       type="number"
       placeholder="0"
       value={amount === "" ? "" : amount}
@@ -206,14 +272,46 @@ const CampaignPage = () => {
         width: `${(amount.toString().length || 1) * 1.2}ch`, // grows with length
         transition: 'width 0.2s ease'
       }}
-    />
-  </div>
-</div>
-</div>
-
-            <p className="text-gray-700 font-semibold mt-2 text-lg">
-              Raised of ₹{campaign?.target_amount?.$numberDecimal || "0"}
-            </p>
+    /> */}
+                </div>
+              </div>
+            </div>
+            <div className="items-center mt-2">
+              {/* <p className="text-gray-700 font-semibold text-lg">
+                Raised of ₹{target}
+              </p>
+              <p className="text-gray-700 font-semibold text-lg">
+                {campaign?.donors_count || 0} donors
+              </p> */}
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <span>
+                  {Math.round(
+                    (Math.round(data?.raised_amount?.$numberDecimal) /
+                      Math.round(data?.target?.$numberDecimal)) *
+                      100
+                  ) || 0}
+                  % raised of {target}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                <div
+                  className="bg-orange-500 h-2.5 rounded-full"
+                  style={{
+                    width: `${Math.round(
+                      (Math.round(data?.raised_amount?.$numberDecimal) /
+                        Math.round(data?.target_amount?.$numberDecimal)) *
+                        100 || 0
+                    )}%`,
+                  }}
+                ></div>
+              </div>
+              <div className="flex justify-between items-center text-sm text-gray-600 my-1">
+                <span>200 Donations</span>
+                <span>0 Donors</span>
+              </div>
+            </div>
 
             {/* Donate Button */}
             {/* <div className="mt-6">
@@ -231,7 +329,7 @@ const CampaignPage = () => {
             <div className="mt-4 flex flex-col items-center">
               <p className="text-gray-500 text-sm">Want to spread the word?</p>
               <button
-                onClick={openShareModal}
+                onClick={handleNativeShare}
                 className="mt-2 text-blue-700 font-semibold hover:underline hover:text-blue-900 transition duration-200"
               >
                 Share this Campaign
@@ -239,60 +337,136 @@ const CampaignPage = () => {
             </div>
           </div>
           <div className="w-full bg-white backdrop-blur-md p-4 md:p-6 mt-4  block md:hidden rounded-lg border border-gray-200">
-  <div className="max-w-md md:max-w-none mx-auto">
-    <h3 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
-      Campaign Details
-    </h3>
-    <hr className="my-3" />
+            <div className="max-w-md md:max-w-none mx-auto">
+              <h3 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                Campaign Details
+              </h3>
+              <hr className="my-3" />
 
-    <ul className="space-y-4">
-      <li className="flex items-center space-x-3">
-        <div className="bg-yellow-500 text-white uppercase w-10 h-10 md:w-12 md:h-12 flex justify-center items-center rounded-full font-bold shadow-md">
-          {campaign?.ngo_name?.charAt(0)}
-        </div>
-        <div>
-          <p className="text-gray-900 font-semibold capitalize md:text-lg">
-            {campaign?.ngo_name || "NGO Name"}
-          </p>
-          <p className="text-gray-500 text-sm">Beneficiary</p>
-        </div>
-      </li>
+              <ul className="space-y-4">
+                <li className="flex items-center space-x-3">
+                  <div className="bg-yellow-500 text-white uppercase w-10 h-10 md:w-12 md:h-12 flex justify-center items-center rounded-full font-bold shadow-md">
+                    {campaign?.ngo_name?.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-gray-900 font-semibold capitalize md:text-lg">
+                      {campaign?.ngo_name || "NGO Name"}
+                    </p>
+                    <p className="text-gray-500 text-sm">Beneficiary</p>
+                  </div>
+                </li>
 
-      <li className="flex items-center space-x-3">
-        <div className="bg-green-500 text-white uppercase w-10 h-10 md:w-12 md:h-12 flex justify-center items-center rounded-full font-bold shadow-md">
-          {campaign?.state?.charAt(0)}
-        </div>
-        <div>
-          <p className="text-gray-900 font-semibold capitalize md:text-lg">
-            {campaign?.state}
-          </p>
-          <p className="text-gray-500 text-sm">Location</p>
-        </div>
-      </li>
-    </ul>
-  </div>
-</div>
+                <li className="flex items-center space-x-3">
+                  <div className="bg-green-500 text-white uppercase w-10 h-10 md:w-12 md:h-12 flex justify-center items-center rounded-full font-bold shadow-md">
+                    {campaign?.state?.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-gray-900 font-semibold capitalize md:text-lg">
+                      {campaign?.state}
+                    </p>
+                    <p className="text-gray-500 text-sm">Location</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
           {/* Description Section */}
-          <div className="bg-white rounded-xl shadow-md mt-6">
-            <h3 className="text-lg font-semibold text-center bg-blue-500 text-white py-3 rounded-t-xl">
+          {/* Story & Updates Section */}
+          <div ref={storyRef} className="bg-white rounded-xl shadow-md mt-6">
+            <h3 className="text-lg font-semibold text-center bg-[#d8573e] text-white py-3 rounded-t-xl">
               Story & Updates
             </h3>
             <div className="text-gray-700 p-2 leading-snug">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: showFullStory
-                    ? campaign?.campaign_description
-                    : campaign?.campaign_description?.slice(0, 300) + "...",
-                }}
-              />
-              {!showFullStory && (
-                <button
-                  onClick={() => setShowFullStory(true)}
-                  className="text-blue-500 mt-3 underline block text-center"
-                >
-                  Read More
-                </button>
-              )}
+              {campaign?.campaign_description &&
+                (() => {
+                  const html = campaign?.campaign_description;
+                  const imageMatch = html.match(/<img[^>]+>/);
+                  const imageTag = imageMatch ? imageMatch[0] : "";
+                  const [beforeImage, afterImage] = imageMatch
+                    ? html.split(imageMatch[0])
+                    : [html, ""];
+
+                  if (imageTag) {
+                    return (
+                      <>
+                        {/* Text before image */}
+                        <div
+                          dangerouslySetInnerHTML={{ __html: beforeImage }}
+                        />
+
+                        {/* First image */}
+                        <div
+                          dangerouslySetInnerHTML={{ __html: imageTag }}
+                          className="my-4"
+                        />
+
+                        {/* Read More toggle */}
+                        {!showFullStory ? (
+                          <button
+                            onClick={() => setShowFullStory(true)}
+                            className="text-blue-500 mt-3 underline block text-center"
+                          >
+                            Read More
+                          </button>
+                        ) : (
+                          <div
+                            dangerouslySetInnerHTML={{ __html: afterImage }}
+                            className="mt-4"
+                          />
+                        )}
+                      </>
+                    );
+                  } else {
+                    // No image case
+                    return (
+                      <>
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: !showFullStory
+                              ? html.slice(0, 300) + "..."
+                              : html,
+                          }}
+                        />
+                        {!showFullStory && (
+                          <button
+                            onClick={() => setShowFullStory(true)}
+                            className="text-blue-500 mt-3 underline block text-center"
+                          >
+                            Read More
+                          </button>
+                        )}
+                      </>
+                    );
+                  }
+                })()}
+            </div>
+          </div>
+
+          {/* Mobile Nav Tabs shown only after scrolling */}
+          {showNav && (
+            <div className="md:hidden fixed top-16 left-4 right-4 mx-auto bg-white rounded-md	 shadow-md flex justify-around py-2 z-50 border border-gray-200 transition duration-300">
+              <button
+                onClick={() => scrollToSection(storyRef)}
+                className="text-sm font-semibold text-[#d8573e] px-4 py-1 hover:bg-[#d8573e]/10 rounded-full transition"
+              >
+                Story
+              </button>
+              <button
+                onClick={() => scrollToSection(updatesRef)}
+                className="text-sm font-semibold text-[#d8573e] px-4 py-1 hover:bg-[#d8573e]/10 rounded-full transition"
+              >
+                Updates
+              </button>
+            </div>
+          )}
+
+          {/* Updates Section */}
+          <div ref={updatesRef} className="bg-white rounded-xl shadow-md mt-6">
+            <h3 className="text-lg font-semibold text-center bg-[#d8573e] text-white py-3 rounded-t-xl">
+              Updates
+            </h3>
+            <div className="text-gray-700 p-2 leading-snug">
+              {campaign?.updates || "No updates available."}
             </div>
           </div>
 
@@ -312,30 +486,28 @@ const CampaignPage = () => {
         </div>
         {/* Right Column*/}
         <div
-  className="md:col-span-2 md:h-[85vh] flex flex-col items-center justify-center"
-  style={{
-    position: "sticky",
-    top: "70px",
-  }}
->
-       {/* Donation Card */}
-       <div className="w-full bg-white backdrop-blur-md p-6 rounded-lg text-center hidden md:block border border-gray-200">
-  <div className="text-start border-b border-gray-200">
-    <h1 className="text-[10px] capitalize md:text-xl font-bold mb-4">
-      {campaign?.campaign_title || "Campaign Title"}
-    </h1>
-  </div>
+          className="md:col-span-2 md:h-[85vh] flex flex-col items-center justify-center"
+          style={{
+            position: "sticky",
+            top: "70px",
+          }}
+        >
+          {/* Donation Card */}
+          <div className="w-full bg-white backdrop-blur-md p-6 rounded-lg text-center hidden md:block border border-gray-200">
+            <div className="text-start border-b border-gray-200">
+              <h1 className="text-[10px] capitalize md:text-xl font-bold mb-4">
+                {campaign?.campaign_title || "Campaign Title"}
+              </h1>
+            </div>
 
-  <div className="w-full">
-  <div className="flex justify-center items-center mb-6 mt-6">
-  <div className="flex items-center gap-2">
-    {/* ₹ symbol */}
-    <span className="text-4xl font-extrabold animate-pulse text-[#d8573e]">
-      ₹
-    </span>
+            <div className="w-full">
+              <div className="flex justify-center items-center mb-6 mt-6">
+                <h2 className="text-4xl font-extrabold text-[#d8573e] animate-pulse">
+                  ₹ {campaign?.raised_amount?.$numberDecimal || "0"}
+                </h2>
 
-    {/* Editable input */}
-    <input
+                {/* Editable input */}
+                {/* <input
       type="number"
       placeholder="0"
       value={amount === "" ? "" : amount}
@@ -359,18 +531,50 @@ const CampaignPage = () => {
         width: `${(amount.toString().length || 1) * 1.2}ch`, // grows with length
         transition: 'width 0.2s ease'
       }}
-    />
-  </div>
-</div>
+    />*
+  </div> */}
+              </div>
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>
+                    {Math.round(
+                      (Math.round(data?.raised_amount?.$numberDecimal) /
+                        Math.round(data?.target?.$numberDecimal)) *
+                        100
+                    ) || 0}
+                    % raised of {target}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                  <div
+                    className="bg-orange-500 h-2.5 rounded-full"
+                    style={{
+                      width: `${Math.round(
+                        (Math.round(data?.raised_amount?.$numberDecimal) /
+                          Math.round(data?.target_amount?.$numberDecimal)) *
+                          100 || 0
+                      )}%`,
+                    }}
+                  ></div>
+                </div>
+                <div className="flex justify-between items-center text-sm text-gray-600 my-1">
+                  <span>200 Donations</span>
+                  <span>0 Donors</span>
+                </div>
+              </div>
 
+              {/* Raised of Target */}
+              {/* <div className="items-center mt-2">
+                <p className="text-gray-700 font-semibold text-lg">
+                  Raised of ₹{target}
+                </p>
+                <p className="text-gray-700 font-semibold 700 text-lg">
+                  {campaign?.donors_count || 0} donors
+                </p>
+              </div> */}
 
-      {/* Raised of Target */}
-      <p className="text-gray-700 font-semibold mb-4 text-center text-lg">
-        Raised of ₹{target}
-      </p>
-
-      {/* Custom Slider */}
-      {/* <div className="relative w-full">
+              {/* Custom Slider */}
+              {/* <div className="relative w-full">
         <input
           type="range"
           min="0"
@@ -380,8 +584,8 @@ const CampaignPage = () => {
           className="w-full h-2 appearance-none bg-gray-200 rounded-full"
           style={{ WebkitAppearance: "none" }}
         /> */}
-        {/* Custom Heart Icon as handle */}
-        {/* <div
+              {/* Custom Heart Icon as handle */}
+              {/* <div
           className="absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2"
           style={{
             left: `${(amount / target) * 100}%`,
@@ -394,18 +598,18 @@ const CampaignPage = () => {
               className="w-4 h-4"
             />
           </div> */}
-        {/* </div> */}
-      {/* </div> */}
-    </div>
+              {/* </div> */}
+              {/* </div> */}
+            </div>
 
             {/* Donate Button */}
-            <div className="mt-6">
+            <div className="mt-6 flex justify-center">
               <button
-                onClick={openDonationModal}
-                className="bg-[#d8573e] text-white font-bold text-sm px-20 py-3 rounded-full transition duration-300 transform hover:scale-110 hover:bg-[#ac4632] group animate-bounce"
+                onClick={handleDonateClick}
+                className="bg-[#d8573e] text-white font-bold text-sm px-20 py-3 rounded-full transition duration-300 transform hover:scale-110 hover:bg-[#c85139] focus:outline-none focus:ring-2 focus:ring-[#d8573e] group animate-bounce"
               >
                 <span className="group-hover:text-white transition duration-300">
-                DONATE NOW
+                  DONATE NOW
                 </span>
               </button>
             </div>
@@ -462,23 +666,37 @@ const CampaignPage = () => {
         handleClose={closeShareModal}
         campaignUrl={window.location.href}
       />
+      {/* Login Modal */}
+      <LoginModel
+        open={isLoginModalVisible}
+        onClose={() => setIsLoginModalVisible(false)}
+     // must pass this correctly!
+     isDonation={true}
+     setIsDonationModalVisible={setIsDonationModalVisible}
+     setDonationuser={setDonationuser}
+     />
+
+      {/* Donation Modal */}
       {isDonationModalVisible && (
         <DonationForm
+        donationuser={donationuser}
           open={isDonationModalVisible}
           handleClose={closeDonationModal}
-          setIsDonationModalVisible={setIsDonationModalVisible}
+     setIsDonationModalVisible={setIsDonationModalVisible}
+
           donation_campaign_id={id}
         />
       )}
+
       <div className="visible md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full border-2 flex justify-center py-2 bg-white">
-      <button
-                onClick={openDonationModal}
-                className="bg-[#d8573e] w-[90vw]  text-white font-bold text-lg px-1 py-3 rounded-full shadow-md transition duration-300 transform hover:scale-110 hover:bg-blue-500 group "
-              >
-                <span className="group-hover:text-white transition duration-300">
-                    DONATE NOW
-                </span>
-              </button>
+        <button
+          onClick={openDonationModal}
+          className="bg-[#d8573e] w-[90vw]  text-white font-bold text-lg px-1 py-2 rounded-full shadow-md transition duration-300 transform hover:scale-110 hover:bg-[#d8573e] focus:outline-none focus:ring-2 focus:ring-[#d8573e] group "
+        >
+          <span className="group-hover:text-white transition duration-300">
+            DONATE NOW
+          </span>
+        </button>
       </div>
     </div>
   );

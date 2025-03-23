@@ -14,7 +14,7 @@ import { useFormik } from "formik";
 import { useSentOtpMutation, useVerifyOtpMutation } from "../redux/services/campaignApi";
 
 
-const LoginModel = ({ open, onClose }) => {
+const LoginModel = ({ open, onClose,isDonation ,setDonationuser,setIsDonationModalVisible}) => {
   const [stepCount, setStepCount] = useState(null);
   const [sendOtp, { isLoading: sendOtpLoading, isSuccess, reset }] =
     useSentOtpMutation();
@@ -61,7 +61,12 @@ const LoginModel = ({ open, onClose }) => {
     if (verifyOtpSuccess) {
       if (typeof window !== 'undefined') {
         localStorage?.setItem("authToken", data?.token);
-        window.location.reload()
+        if(!isDonation){
+          window.location.reload()
+        }else{
+setDonationuser(data)
+setIsDonationModalVisible(true)
+        }
       }
       onClose();
     }
@@ -186,7 +191,13 @@ const LoginModel = ({ open, onClose }) => {
 
       </DialogActions>
       </form>
-      <p className="text-xs text-center pb-3 px-3">*By continuing,  I agree to the <a href="/terms" className="text-blue-500">Terms Of Use  </a> and <a href="/privacy-policy" className="text-blue-500">Privacy Policy</a>   </p>
+      <p className="text-[10px] md:text-xs text-center pb-1 px-6">
+  *By continuing, I agree to the{' '}
+  <a href="/terms" className="text-blue-500">Terms Of Use</a> and{' '}
+  <a href="/privacy-policy" className="text-blue-500">Privacy Policy</a>.
+</p>
+<p className="text-[10px] md:text-xs text-center pb-3 px-6">
+and receiving SMS/Whatsapp updates and notifications.</p>
     </Dialog>
   );
 };
