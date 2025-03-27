@@ -7,7 +7,7 @@ const AboutUsPage = () => {
     <div className="md:container mx-auto p-6 md:p-12 mt-8">
       <div className="bg-white p-6 md:p-12 shadow-lg rounded-lg">
         <section className="mb-8">
-          <h1 className="text-4xl font-bold text-center mb-4">Faq's</h1>
+          <h1 className="text-4xl font-bold text-center mb-4">About Us</h1>
 
 
           <div dangerouslySetInnerHTML={{__html:settings?.data?.about_us}} />

@@ -14,8 +14,6 @@ const ProtectedLayout = () => {
 
   const navigate = useNavigate();
 
- 
-console.log("dvfv")
   return (
     <>
       <PublicHeader />
@@ -24,21 +22,21 @@ console.log("dvfv")
         className=" pt-2  border-t w-full bg-[#faf8f0]"
         //  style={{backgroundImage:"url(/images/back12.png)"}}
       >
-        <div className="  w-full mx-auto lg:container px-4 sm:px-6 lg:px-6 ">
+        <div className="  w-full mx-auto lg:container px-4 sm:mt- sm:px-6 lg:px-6">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-12 pb-3 border-b-2 border-gray-200">
             <div className="flex flex-col gap-8 xl:gap-4 w-full lg:max-w-full mx-auto">
               <div className="flex flex-col gap-2 md:mt-4">
                 <h2 className="font-manrope font-bold text-4xl leading-snug text-black max-[470px]:text-center">
                   <Link to={"/"}>
                     <img
-                     src="/NAME.png"
+                      src="/giveaze2.png"
                       alt="logo"
                       className="w-36 mx-auto md:mx-0"
-/>
+                    />
                   </Link>
                 </h2>
-                <p className="text-base font-normal text-black max-[470px]:text-center">
-                Journey with Trust, Success with Gratitude
+                <p className="text-base ml-2 font-normal text-black max-[470px]:text-center">
+                  Protecting Tradition, Empowering Devotion.
                 </p>
                 <div className="flex items-center max-[470px]:justify-center gap-5">
                   <a
@@ -151,7 +149,7 @@ console.log("dvfv")
             </div>
             <div className="w-full lg:max-w-full mx-auto flex flex-col mb-2 min-[470px]:flex-row justify-between gap-4 -mt-10 md:mt-4 sm:gap-20 md:gap-10 xl:gap-24">
               <div className="">
-              <h6 className="text-lg font-bold text-[#d8573e] mb-3 max-[470px]:text-center">
+                <h6 className="text-lg font-bold text-[#d8573e] mb-3 max-[470px]:text-center">
                   Quick Links{" "}
                 </h6>
                 <ul className="flex flex-col max-[470px]:items-center max-[470px]:justify-center gap-3">
@@ -199,7 +197,7 @@ console.log("dvfv")
                       href="javascript:;"
                       className="text-base font-normal max-lg:text-center text-black blackspace-nowrap transition-all duration-300 hover:text-yellow-800 focus-within:outline-0 focus-within:text-yellow-800"
                     >
-      info@giveaze.com
+                      info@giveaze.com
                     </a>
                   </li>
                   <li>
@@ -208,8 +206,8 @@ console.log("dvfv")
                       className="text-center md:text-left font-normal text-black blackspace-nowrap transition-all duration-300 hover:text-yellow-800 focus-within:outline-0 focus-within:text-yellow-800"
                     >
                       <p>
-                      MPC1705, Parkwest, Hosakere Road<br /> Binnypet, Bangalore - 560023 
-                        
+                        MPC1705, Parkwest, Hosakere Road
+                        <br /> Binnypet, Bangalore - 560023
                       </p>
                     </a>
                   </li>

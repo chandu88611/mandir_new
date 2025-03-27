@@ -11,14 +11,22 @@ import {
 import "react-phone-number-input/style.css";
 import PhoneInput from "react-phone-number-input";
 import { useFormik } from "formik";
-import { useSentOtpMutation, useVerifyOtpMutation } from "../redux/services/campaignApi";
+import {
+  useSentOtpMutation,
+  useVerifyOtpMutation,
+} from "../redux/services/campaignApi";
 
-
-const LoginModel = ({ open, onClose,isDonation ,setDonationuser,setIsDonationModalVisible}) => {
+const LoginModel = ({
+  open,
+  onClose,
+  isDonation,
+  setDonationuser,
+  setIsDonationModalVisible,
+}) => {
   const [stepCount, setStepCount] = useState(null);
   const [sendOtp, { isLoading: sendOtpLoading, isSuccess, reset }] =
     useSentOtpMutation();
-  const [sendOtpInSeconds,setSendOtpInSeconds]=useState(60)
+  const [sendOtpInSeconds, setSendOtpInSeconds] = useState(60);
   const [timerActive, setTimerActive] = useState(false);
   const [
     verifyOtp,
@@ -27,11 +35,11 @@ const LoginModel = ({ open, onClose,isDonation ,setDonationuser,setIsDonationMod
       isLoading: verifyOtpLoading,
       isSuccess: verifyOtpSuccess,
       reset: verifyOtpReset,
-      error: verifyOtpError
+      error: verifyOtpError,
     },
   ] = useVerifyOtpMutation();
 
-  
+  // console.log(data);
   function removeCountryCode(phoneNumber) {
     const cleanedNumber = phoneNumber.replace(/^\+\d{1,2}/, "");
     return cleanedNumber;
@@ -40,7 +48,7 @@ const LoginModel = ({ open, onClose,isDonation ,setDonationuser,setIsDonationMod
   useEffect(() => {
     if (isSuccess) {
       setStepCount(1);
-      setSendOtpInSeconds(60); 
+      setSendOtpInSeconds(60);
       setTimerActive(true);
     }
   }, [isSuccess, reset]);
@@ -56,16 +64,15 @@ const LoginModel = ({ open, onClose,isDonation ,setDonationuser,setIsDonationMod
     }
     return () => clearInterval(timer);
   }, [timerActive, sendOtpInSeconds]);
-
   useEffect(() => {
     if (verifyOtpSuccess) {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         localStorage?.setItem("authToken", data?.token);
-        if(!isDonation){
-          window.location.reload()
-        }else{
-setDonationuser(data)
-setIsDonationModalVisible(true)
+        if (!isDonation) {
+          window.location.reload();
+        } else {
+          setDonationuser(data?.user);
+          setIsDonationModalVisible(true);
         }
       }
       onClose();
@@ -73,7 +80,6 @@ setIsDonationModalVisible(true)
   }, [verifyOtpSuccess, data?.token, onClose]);
 
   const phoneForm = useFormik({
-  
     initialValues: {
       mobile_number: "",
     },
@@ -105,68 +111,72 @@ setIsDonationModalVisible(true)
       });
     },
   });
-  
 
   return (
-    <Dialog open={open} onClose={onClose} sx={{borderRadius:'20px' }}  className="px-18 ">
-      <form action=""  onSubmit={stepCount?otpForm.handleSubmit:phoneForm.handleSubmit}>
-
-
-      <DialogTitle className="font-bold text-center ">
-        {stepCount ? (
-          <>
-            Verify OTP 
-            <br />
-            <p className="text-sm font-thin pt-2">
-              Sent to {phoneForm.values?.mobile_number}
-            </p>
-          </>
-        ) : (
-          "Login / Sign up "
-        )}
-      </DialogTitle>
-       
-      <DialogContent>
-      <div className="flex w-full justify-center items-center space-x-2 py-2">
-      {stepCount ? (
-            <CaptureOtp form={otpForm} />
+    <Dialog
+      open={open}
+      onClose={onClose}
+      sx={{ borderRadius: "64px" }}
+      className="px-18 "
+    >
+      <form
+        action=""
+        onSubmit={stepCount ? otpForm.handleSubmit : phoneForm.handleSubmit}
+      >
+        <DialogTitle className="font-bold text-center ">
+          {stepCount ? (
+            <>
+              Verify OTP
+              <br />
+              <p className="text-sm font-thin pt-2">
+                Sent to {phoneForm.values?.mobile_number}
+              </p>
+            </>
           ) : (
-            <CapturePhoneNumber form={phoneForm} />
+            "Login / Sign up "
           )}
-        </div>
+        </DialogTitle>
 
-        {!stepCount && (
-          <div className="w-full text-xs text-center text-gray-400 mt-2">
-            Enter 10 digit phone number to login 
+        <DialogContent>
+          <div className="flex w-full justify-center items-center space-x-2 py-2">
+            {stepCount ? (
+              <CaptureOtp form={otpForm} />
+            ) : (
+              <CapturePhoneNumber form={phoneForm} />
+            )}
           </div>
-        )}
 
-        {verifyOtpError && (
-          <div className="w-full text-xs text-center text-red-500">
-            {verifyOtpError?.data?.error}
-          </div>
-        )}
-      </DialogContent>
-      <DialogActions>
-        {stepCount ? (
-          <div className="w-full flex flex-col">
-          
-          <Button
-  type="button"
-  onClick={() => otpForm.handleSubmit()}
-  variant="contained"
-  className="!mx-auto !-mt-4 w-[57%]"
-  sx={{
-    backgroundColor: '#ffdd04',
-    color: '#000',
-    '&:hover': {
-      backgroundColor: '#e6c703', // slightly darker on hover
-    },
-  }}
->
-            {verifyOtpLoading ? <CircularProgress size={16} /> : "Verify"}
-          </Button>
-          <Button
+          {!stepCount && (
+            <div className="w-full text-xs text-center text-gray-400 mt-2">
+              Enter 10 digit phone number to login
+            </div>
+          )}
+
+          {verifyOtpError && (
+            <div className="w-full text-xs text-center text-red-500">
+              {verifyOtpError?.data?.error}
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          {stepCount ? (
+            <div className="w-full flex flex-col">
+              <Button
+                type="button"
+                onClick={() => otpForm.handleSubmit()}
+                variant="contained"
+                className="!mx-auto !-mt-4 w-[57%]"
+                sx={{
+                  backgroundColor: "#ffdd04",
+                  color: "#000",
+                  "&:hover": {
+                    backgroundColor: "#e6c703", // slightly darker on hover
+                  },
+                }}
+              >
+                {verifyOtpLoading ? <CircularProgress size={16} /> : "Verify"}
+              </Button>
+              <Button
                 disabled={sendOtpInSeconds > 0}
                 onClick={() => {
                   phoneForm.handleSubmit();
@@ -176,28 +186,33 @@ setIsDonationModalVisible(true)
               >
                 Resend OTP {sendOtpInSeconds > 0 && `(${sendOtpInSeconds}s)`}
               </Button>
-          </div>
-        ) : (
-          <Button
-            type="button"
-            onClick={() => phoneForm.handleSubmit()}
-            variant="contained"
-            
-            className="w-[50%] !mx-auto !-mt-5 !bg-[#d6573d]"
-          >
-            {sendOtpLoading ? <CircularProgress size={16} /> : "Submit"}
-          </Button>
-        )}
-
-      </DialogActions>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => phoneForm.handleSubmit()}
+              variant="contained"
+              className="w-[50%] !mx-auto !-mt-5 !bg-[#d6573d]"
+            >
+              {sendOtpLoading ? <CircularProgress size={16} /> : "Submit"}
+            </Button>
+          )}
+        </DialogActions>
       </form>
-      <p className="text-[10px] md:text-xs text-center pb-1 px-6">
-  *By continuing, I agree to the{' '}
-  <a href="/terms" className="text-blue-500">Terms Of Use</a> and{' '}
-  <a href="/privacy-policy" className="text-blue-500">Privacy Policy</a>.
-</p>
-<p className="text-[10px] md:text-xs text-center pb-3 px-6">
-and receiving SMS/Whatsapp updates and notifications.</p>
+      <p className="text-[10px] md:text-xs text-center pb-1 px-3">
+        *By continuing, I agree to the{" "}
+        <a href="/terms" className="text-blue-500">
+          Terms Of Use
+        </a>{" "}
+        and{" "}
+        <a href="/privacy-policy" className="text-blue-500">
+          Privacy Policy
+        </a>
+        .
+      </p>
+      <p className="text-[10px] md:text-xs text-center pb-3 px-6">
+        and receiving SMS/Whatsapp updates and notifications.
+      </p>
     </Dialog>
   );
 };
@@ -223,16 +238,18 @@ const CaptureOtp = ({ form }) => {
         variant="outlined"
         placeholder="Enter OTP"
         fullWidth
-        inputProps={{ maxLength: 6, style: { padding: "8px 10px", height: "30px" } }}
+        inputProps={{
+          maxLength: 6,
+          style: { padding: "8px 10px", height: "30px" },
+        }}
         value={form.values.otp}
-        onChange={(e) => form.setFieldValue('otp', e.target.value)}
+        onChange={(e) => form.setFieldValue("otp", e.target.value)}
         error={form.touched.otp && Boolean(form.errors.otp)}
         helperText={form.touched.otp && form.errors.otp}
         sx={{
-          "& input": { textAlign: "center", letterSpacing: "0.3em" }
+          "& input": { textAlign: "center", letterSpacing: "0.3em" },
         }}
       />
     </div>
   );
 };
-

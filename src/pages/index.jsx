@@ -119,11 +119,12 @@ const HeroSlider = () => {
                                     )) *
                                     100
                                 ) || 0}
-                                % raised of{" "}
+                                % raised
                                 {data?.target_amount?.$numberDecimal || 0}
                               </span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                              {/* ₹ {data?.raised_amount?.$numberDecimal || "0"} */}
                               <div
                                 className="bg-orange-500 h-2.5 rounded-full"
                                 style={{
@@ -198,7 +199,7 @@ const HeroSlider = () => {
       <div className="px-3 md:px-10 my-4 w-full md:w-[85%] mx-auto">
         <h2 className="text-2xl font-bold text-center">FAQs</h2>
         <p className="text-center">
-          Clear all your doubts here regarding how things work
+          {/* Clear all your doubts here regarding how things work */}
         </p>
         <FAQ />
       </div>

@@ -1,25 +1,30 @@
 import React from 'react';
 
+
 const testimonials = [
   {
-    name: "Sri Venkateswara Temple",
-    designation: "Tirupati Trust",
-    feedback: "Mauris sodales tellus vel felis dapibus, sit amet porta nibh egestas. Sed dignissim tellus quis sapien sagittis cursus. Vivamus nec est accumsan et justo odio dignissim luctus eu blanditlis.",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzZ0VfhWna37BTPzP32CAPNozaxlcZSaCNuXa4EbNQrkI-zEzKMpC5yjBtLyYW1ncSWtQ&usqp=CAU" // Replace with actual image path
+    name: "Shri Mehandipur Balaji Temple Trust",
+    designation: "Bangalore",
+    feedback:
+      "Our temple’s restoration was not just a physical transformation but a spiritual revival. The temple had lost its vibrancy, but with Giveaze’s intervention, it has been given new life and ensured that both the spiritual and practical needs of the temple were met.",
+    image: "/1.jpeg", // Replace with actual image path
   },
   {
-    name: "Somnath Temple",
-    designation: "Somnath Trust",
-    feedback: "Mauris sodales tellus vel felis dapibus, sit amet porta nibh egestas. Sed dignissim tellus quis sapien sagittis cursus. Vivamus nec est accumsan et justo odio dignissim luctus eu blanditlis.",
-    image: "https://lh3.googleusercontent.com/p/AF1QipMU3k2ONQeR072h1iK4-68-NHSLWqkQMVrzmibJ=s1360-w1360-h1020" // Replace with actual image path
+    name: "Shri Shyam Baba Temple Trust",
+    designation: "Pune",
+    feedback:
+      "The restoration of our temple was not just about repairing walls; it was about reviving a place of spiritual connection for thousands. Giveaze made this possible with their dedication and transparency.",
+    image: "/2.jpeg", // Replace with actual image path
   },
   {
-    name: "Golden Temple",
-    designation: "Amritsar Trust",
-    feedback: "Mauris sodales tellus vel felis dapibus, sit amet porta nibh egestas. Sed dignissim tellus quis sapien sagittis cursus. Vivamus nec est accumsan et justo odio dignissim luctus eu blanditlis.",
-    image: "https://whyweseek.com/wp-content/uploads/2018/03/Golden-Temple-at-Night-Amritsar.jpg" // Replace with actual image path
-  }
+    name: "Shri Karni Mata Mandir Trust",
+    designation: "Udaipur",
+    feedback:
+      "From improving infrastructure to ensuring regular maintenance, Giveaze has helped us sustain the temple for future generations. Their support has been invaluable in keeping our traditions alive.",
+    image: "/3.jpeg", // Replace with actual image path
+  },
 ];
+
 
 const Testimonials = () => {
   return (

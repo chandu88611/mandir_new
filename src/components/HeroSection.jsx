@@ -1,16 +1,18 @@
-import React from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
+import React from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import { useGetBannerImagesQuery, useGetSettingsQuery } from '../redux/services/campaignApi';
+import {
+  useGetBannerImagesQuery,
+  useGetSettingsQuery,
+} from "../redux/services/campaignApi";
 
 const HeroSection = () => {
-const {data:images}=useGetBannerImagesQuery()
-const {data:settings}=useGetSettingsQuery()
+  const { data: images } = useGetBannerImagesQuery();
+  const { data: settings } = useGetSettingsQuery();
 
   return (
-
     <section className="relative bg-white mt-[60px] lg:w-[1200px] w-full mx-auto">
       <div className=" mx-auto">
         {/* Swiper Slider */}
@@ -35,18 +37,19 @@ const {data:settings}=useGetSettingsQuery()
                   {settings?.data?.banner_title}
                 </h3>
                 <p className="mt-4 text-sm md:text-md lg:text-md text-gray-600">
-                {settings?.data?.banner_description}        </p>
-             <a href={settings?.data?.banner_link}>
-             <button className="mt-6 py-3 w-[200px] px-6 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700">
-                  Join Us Now!  
-                </button>
-              </a>  
+                  {settings?.data?.banner_description}{" "}
+                </p>
+                <a href={settings?.data?.banner_link}>
+                  <button className="mt-6 py-3 w-[200px] px-6 bg-[#545454] text-white font-semibold rounded-full hover:bg-[#7b7a7a]">
+                    Join Us Now!
+                  </button>
+                </a>
               </div>
               <div className="lg:w-1/2">
                 <img
                   className="w-full h-[330px] object-cover"
                   src={images?.banners[0]}
-                  alt="Banner 1"
+                  alt=""
                 />
               </div>
             </div>
@@ -97,11 +100,8 @@ const {data:settings}=useGetSettingsQuery()
               </div>
             </div>
           </SwiperSlide> */}
-
         </Swiper>
       </div>
-
- 
     </section>
   );
 };

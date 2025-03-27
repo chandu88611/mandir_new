@@ -2,12 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  HiUserCircle,
-  HiOutlineLogout,
-  HiMenu,
-  HiX,
-} from "react-icons/hi";
+import { HiUserCircle, HiOutlineLogout, HiMenu, HiX } from "react-icons/hi";
 import { IoIosArrowDown } from "react-icons/io";
 import { FiUser } from "react-icons/fi";
 import axios from "axios";
@@ -23,29 +18,32 @@ const PublicHeader = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [token, setToken] = useState(null);
-  const [fetchData,{data}]=useLazyGetUserProfileQuery()
-  const user =useSelector(state=>state.user.userData)
-  console.log(user)
-const dispatch =useDispatch()
+  const [fetchData, { data }] = useLazyGetUserProfileQuery();
+  const user = useSelector((state) => state.user.userData);
+  console.log(user);
+  const dispatch = useDispatch();
   useEffect(() => {
-    if(localStorage.getItem("authToken")){
-      const call=async()=>{
+    if (localStorage.getItem("authToken")) {
+      const call = async () => {
         try {
-          
-          const res=await fetchData()
-          if(res?.data?.status){
-         dispatch(setUserData({...res?.data?.data,donations:res?.data?.donations}))  
-          }else{
-            localStorage.removeItem('authToken')
-            window.location.reload()
+          const res = await fetchData();
+          if (res?.data?.status) {
+            dispatch(
+              setUserData({
+                ...res?.data?.data,
+                donations: res?.data?.donations,
+              })
+            );
+          } else {
+            localStorage.removeItem("authToken");
+            window.location.reload();
           }
         } catch (error) {
-          localStorage.removeItem('authToken')
-          window.location.reload()
+          localStorage.removeItem("authToken");
+          window.location.reload();
         }
-
-      }
-      call()
+      };
+      call();
     }
     if (typeof window !== "undefined") {
       setToken(localStorage?.getItem("authToken"));
@@ -65,11 +63,11 @@ const dispatch =useDispatch()
       );
       if (typeof window !== "undefined") {
         localStorage?.removeItem("authToken");
-        dispatch(setUserData())
+        dispatch(setUserData());
       }
       setIsProfileDropdownOpen(false);
       setToken(null);
-      window.location.href="/"
+      window.location.href = "/";
     } catch (error) {
       console.error("Error logging out:", error);
     }
@@ -91,7 +89,7 @@ const dispatch =useDispatch()
             <div className="flex-shrink-0">
               <Link to="/">
                 <img
-                  src="/NAME.png"
+                  src="/giveaze2.png"
                   alt="Logo"
                   className="w-32 md:w-36 h-auto"
                 />
@@ -99,7 +97,6 @@ const dispatch =useDispatch()
             </div>
 
             {/* Desktop Navigation */}
-            
 
             {/* Action Buttons */}
             <div className="flex items-center space-x-4">
@@ -109,20 +106,22 @@ const dispatch =useDispatch()
               >
                 Start Campaign
               </button> */}
-<div className="hidden md:flex md:items-center md:space-x-6 mr-3">
-              {navigationLinks.map((link) => (
-                <a
-                  // key={link.name}
-                  href={link.path}
-                  className="text-gray-700 hover:text-blue-600 font-medium"
-                >
-                  {link.name}
-                </a>
-              ))}
-            </div>
+              <div className="hidden md:flex md:items-center md:space-x-6 mr-3">
+                {navigationLinks.map((link) => (
+                  <a
+                    // key={link.name}
+                    href={link.path}
+                    className="text-gray-700 hover:text-blue-600 font-medium"
+                  >
+                    {link.name}
+                  </a>
+                ))}
+              </div>
               {token ? (
-                <div className="relative  " onMouseLeave={() =>
-                  setIsProfileDropdownOpen(false)}>
+                <div
+                  className="relative  "
+                  onMouseLeave={() => setIsProfileDropdownOpen(false)}
+                >
                   <button
                     onClick={() =>
                       setIsProfileDropdownOpen(!isProfileDropdownOpen)
@@ -132,7 +131,7 @@ const dispatch =useDispatch()
                     <HiUserCircle className="w-6 h-6 text-gray-700" />
                     <IoIosArrowDown className="w-4 h-4 text-gray-700" />
                   </button>
-                  { isProfileDropdownOpen&&(
+                  {isProfileDropdownOpen && (
                     <div className="absolute right-0  w-40 bg-white border rounded-md shadow-lg py-2 ">
                       <Link
                         to="/profile"
@@ -144,13 +143,13 @@ const dispatch =useDispatch()
                       <button
                         onClick={() => {
                           Swal.fire({
-                            title: 'Are you sure?',
-                            text: 'You will be logged out of your account.',
-                            icon: 'warning',
+                            title: "Are you sure?",
+                            text: "You will be logged out of your account.",
+                            icon: "warning",
                             showCancelButton: true,
-                            confirmButtonColor: '#3085d6',
-                            cancelButtonColor: '#d33',
-                            confirmButtonText: 'Yes, log me out'
+                            confirmButtonColor: "#3085d6",
+                            cancelButtonColor: "#d33",
+                            confirmButtonText: "Yes, log me out",
                           }).then((result) => {
                             if (result.isConfirmed) {
                               handleLogout();
@@ -194,14 +193,10 @@ const dispatch =useDispatch()
               className="fixed inset-0 bg-black opacity-50"
               onClick={() => setIsMobileMenuOpen(false)}
             ></div>
-            <div className="fixed inset-y-0 right-0 w-64 bg-white shadow-md py-4 px-6 overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
+            <div className="fixed inset-y-0 right-0 w-64 bg-white shadow-md py-4 px-4 overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
                 <Link to="/">
-                  <img
-                    src="/logo1.png"
-                    alt="Logo"
-                    className="w-36 h-auto"
-                  />
+                  <img src="/giveaze2.png" alt="Logo" className="w-32 h-auto" />
                 </Link>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -210,7 +205,7 @@ const dispatch =useDispatch()
                   <HiX className="w-6 h-6" />
                 </button>
               </div>
-              <nav className="flex flex-col space-y-4">
+              <nav className="flex flex-col space-y-4 ml-3">
                 {navigationLinks.map((link) => (
                   <Link
                     key={link.name}

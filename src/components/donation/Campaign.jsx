@@ -10,7 +10,6 @@ import "swiper/css";
 import DonationForm from "./DonationForm";
 import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
- 
 
 // import 'swiper/css/navigation';
 import "swiper/css/pagination";
@@ -19,8 +18,8 @@ import ShareCampaignModal from "./ShareCampaign";
 import LoginModel from "../LoginModel";
 
 const CampaignPage = () => {
-  const [currentSlide, setCurrentSlide] = useState(1);
-  const [donationuser,setDonationuser]=useState()
+  // const [currentSlide, setCurrentSlide] = useState(1);
+  const [donationuser, setDonationuser] = useState();
   const { id } = useParams();
   const [get, { data, error, isLoading }] = useLazyGetCampaignQuery();
   const [images, setImages] = useState([]);
@@ -35,8 +34,9 @@ const CampaignPage = () => {
   const [isDonationModalVisible, setIsDonationModalVisible] = useState(false);
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
   const [shouldTriggerDonation, setShouldTriggerDonation] = useState(false);
+  const [isDonation, setIsDonation] = useState(true);
 
-  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  const user = useSelector((state) => state.user.userData);
   const dispatch = useDispatch();
 
   const handleSliderChange = (e) => {
@@ -44,21 +44,11 @@ const CampaignPage = () => {
   };
   const openShareModal = () => setIsShareModalVisible(true);
   const closeShareModal = () => setIsShareModalVisible(false);
- 
-
-  const handleDonateClick = () => {
-    if (isLoggedIn) {
-      setIsDonationModalVisible(true);
-    } else {
-      setShouldTriggerDonation(true);
-      setIsLoginModalVisible(true);
-    }
-  };
-
-  
 
   const closeDonationModal = () => {
     setIsDonationModalVisible(false);
+    setIsDonation(false);
+    // window.location.reload();
   };
 
   // Handle scroll to show nav after user scrolls down
@@ -149,7 +139,11 @@ const CampaignPage = () => {
   // const images =   [campaign?.main_picture , ...campaign?.other_pictures]
   // const [isDonationModalVisible, setIsDonationModalVisible] = useState(false);
   const openDonationModal = () => {
-    setIsDonationModalVisible(true);
+    if (user?.full_name) {
+      setIsDonationModalVisible(true);
+    } else {
+      setIsLoginModalVisible(true);
+    }
   };
 
   // const closeDonationModal = () => {
@@ -178,7 +172,13 @@ const CampaignPage = () => {
       );
     }
   };
-console.log(donationuser)
+  useEffect(() => {
+    console.log(user);
+    if (user?.full_name) {
+      setDonationuser(user);
+    }
+  }, [user]);
+  console.log(data);
   return (
     <div className="w-full lg:w-[1300px] mx-auto p-4 mt-16 ">
       {/* Top Title Section */}
@@ -229,26 +229,27 @@ console.log(donationuser)
             )}
           </div>
 
-          <div className="w-full  bg-white backdrop-blur-md px-4 p-4 rounded-lg mt-2 shadow-xl text-center md:hidden">
-            <div className="text-center my-4 border-b border-gray-400">
-              <h1 className="text-[20px] capitalize md:text-2xl font-bold mb-2">
+          <div className="w-full  bg-white backdrop-blur-md px-4 p-4 rounded-lg text-center md:hidden">
+            <div className="text-center my-2">
+              <h1 className="text-[20px] capitalize md:text-2xl font-bold mb-4">
                 {campaign?.campaign_title || "Campaign Title"}
               </h1>
             </div>
-
-            <div className="w-full">
-              <div className="flex justify-center items-center mb-6 mt-6">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-4xl font-extrabold text-[#d8573e] animate-pulse">
-                    ₹ {campaign?.raised_amount?.$numberDecimal || "0"}
-                  </h2>
-                  {/* ₹ symbol */}
-                  {/* <span className="text-4xl font-extrabold animate-pulse text-[#d8573e]">
+            <div className="border p-6 border-gray-300 rounded-xl">
+              <div className="w-full">
+                <div className="flex justify-center items-center mb-4">
+                  <div className="flex items-center gap-1">
+                    <h2 className="text-3xl font-extrabold text-[#d8573e] animate-pulse">
+                      ₹ {campaign?.raised_amount?.$numberDecimal || "0"}{" "}
+                    </h2>
+                    <h4 className="text-gray-600 ml-2">Raised</h4>
+                    {/* ₹ symbol */}
+                    {/* <span className="text-4xl font-extrabold animate-pulse text-[#d8573e]">
       ₹
     </span> */}
 
-                  {/* Editable input */}
-                  {/* <input
+                    {/* Editable input */}
+                    {/* <input
       type="number"
       placeholder="0"
       value={amount === "" ? "" : amount}
@@ -273,46 +274,47 @@ console.log(donationuser)
         transition: 'width 0.2s ease'
       }}
     /> */}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="items-center mt-2">
-              {/* <p className="text-gray-700 font-semibold text-lg">
+              <div className="items-center mt-2">
+                {/* <p className="text-gray-700 font-semibold text-lg">
                 Raised of ₹{target}
               </p>
               <p className="text-gray-700 font-semibold text-lg">
                 {campaign?.donors_count || 0} donors
               </p> */}
-            </div>
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>
-                  {Math.round(
-                    (Math.round(data?.raised_amount?.$numberDecimal) /
-                      Math.round(data?.target?.$numberDecimal)) *
-                      100
-                  ) || 0}
-                  % raised of {target}
-                </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                <div
-                  className="bg-orange-500 h-2.5 rounded-full"
-                  style={{
-                    width: `${Math.round(
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>Goal ₹{target}</span>
+                  <span>
+                    {Math.round(
                       (Math.round(data?.raised_amount?.$numberDecimal) /
-                        Math.round(data?.target_amount?.$numberDecimal)) *
-                        100 || 0
-                    )}%`,
-                  }}
-                ></div>
-              </div>
-              <div className="flex justify-between items-center text-sm text-gray-600 my-1">
-                <span>200 Donations</span>
-                <span>0 Donors</span>
+                        Math.round(data?.target?.$numberDecimal)) *
+                        100
+                    ) || 0}
+                    %
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                  <div
+                    className="bg-orange-500 h-2.5 rounded-full"
+                    style={{
+                      width: `${Math.round(
+                        (Math.round(data?.raised_amount?.$numberDecimal) /
+                          Math.round(data?.target_amount?.$numberDecimal)) *
+                          100 || 0
+                      )}%`,
+                    }}
+                  ></div>
+                </div>
+                <div className="flex justify-between items-center text-sm text-gray-600 my-1">
+                  {/* <span>200 Donations</span> */}
+                  <span>0 Donors</span>
+                </div>
               </div>
             </div>
-
             {/* Donate Button */}
             {/* <div className="mt-6">
               <button
@@ -330,7 +332,7 @@ console.log(donationuser)
               <p className="text-gray-500 text-sm">Want to spread the word?</p>
               <button
                 onClick={handleNativeShare}
-                className="mt-2 text-blue-700 font-semibold hover:underline hover:text-blue-900 transition duration-200"
+                className="mt-2 text-blue-700 px-2 bg-blue-50 rounded-full font-semibold hover:underline hover:text-blue-900 transition duration-200"
               >
                 Share this Campaign
               </button>
@@ -374,7 +376,7 @@ console.log(donationuser)
           {/* Story & Updates Section */}
           <div ref={storyRef} className="bg-white rounded-xl shadow-md mt-6">
             <h3 className="text-lg font-semibold text-center bg-[#d8573e] text-white py-3 rounded-t-xl">
-              Story & Updates
+              Story
             </h3>
             <div className="text-gray-700 p-2 leading-snug">
               {campaign?.campaign_description &&
@@ -479,8 +481,9 @@ console.log(donationuser)
           )}
 
           {/* FAQ Section */}
-          <div className="bg-white p-5 rounded-xl shadow-md mt-10">
-            <h3 className="text-lg font-semibold">FAQs</h3>
+
+          <div className="bg-white md:p-2 rounded-xl shadow-md mt-10">
+            <h3 className="text-2xl text-center  font-semibold">FAQs</h3>
             <FAQ />
           </div>
         </div>
@@ -499,15 +502,16 @@ console.log(donationuser)
                 {campaign?.campaign_title || "Campaign Title"}
               </h1>
             </div>
-
-            <div className="w-full">
-              <div className="flex justify-center items-center mb-6 mt-6">
-                <h2 className="text-4xl font-extrabold text-[#d8573e] animate-pulse">
-                  ₹ {campaign?.raised_amount?.$numberDecimal || "0"}
-                </h2>
-
-                {/* Editable input */}
-                {/* <input
+            <div className="border p-6 border-gray-300 rounded-xl">
+              <div className="w-full">
+                <div className="flex justify-center items-center mb-2 mt-2">
+                  <h2 className="text-4xl font-extrabold text-[#d8573e] animate-pulse">
+                    ₹ {campaign?.raised_amount?.$numberDecimal || "0"}
+                  </h2>
+                  <h4 className="text-gray-600 ml-2">Raised</h4>
+                  {/* <h4 className="ml-2">Raised</h4> */}
+                  {/* Editable input */}
+                  {/* <input
       type="number"
       placeholder="0"
       value={amount === "" ? "" : amount}
@@ -533,36 +537,37 @@ console.log(donationuser)
       }}
     />*
   </div> */}
-              </div>
-              <div className="mt-4">
-                <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>
-                    {Math.round(
-                      (Math.round(data?.raised_amount?.$numberDecimal) /
-                        Math.round(data?.target?.$numberDecimal)) *
-                        100
-                    ) || 0}
-                    % raised of {target}
-                  </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                  <div
-                    className="bg-orange-500 h-2.5 rounded-full"
-                    style={{
-                      width: `${Math.round(
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Goal ₹{target}</span>
+                    <span>
+                      {Math.round(
                         (Math.round(data?.raised_amount?.$numberDecimal) /
-                          Math.round(data?.target_amount?.$numberDecimal)) *
-                          100 || 0
-                      )}%`,
-                    }}
-                  ></div>
-                </div>
-                <div className="flex justify-between items-center text-sm text-gray-600 my-1">
-                  <span>200 Donations</span>
-                  <span>0 Donors</span>
+                          Math.round(data?.target?.$numberDecimal)) *
+                          100
+                      ) || 0}
+                      %
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                    <div
+                      className="bg-orange-500 h-2.5 rounded-full"
+                      style={{
+                        width: `${Math.round(
+                          (Math.round(data?.raised_amount?.$numberDecimal) /
+                            Math.round(data?.target_amount?.$numberDecimal)) *
+                            100 || 0
+                        )}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-gray-600 my-1">
+                    {/* <span>200 Donations</span> */}
+                    <span>0 Donors</span>
+                  </div>
                 </div>
               </div>
-
               {/* Raised of Target */}
               {/* <div className="items-center mt-2">
                 <p className="text-gray-700 font-semibold text-lg">
@@ -603,9 +608,9 @@ console.log(donationuser)
             </div>
 
             {/* Donate Button */}
-            <div className="mt-6 flex justify-center">
+            <div className="mt-8 flex justify-center">
               <button
-                onClick={handleDonateClick}
+                onClick={openDonationModal}
                 className="bg-[#d8573e] text-white font-bold text-sm px-20 py-3 rounded-full transition duration-300 transform hover:scale-110 hover:bg-[#c85139] focus:outline-none focus:ring-2 focus:ring-[#d8573e] group animate-bounce"
               >
                 <span className="group-hover:text-white transition duration-300">
@@ -618,8 +623,8 @@ console.log(donationuser)
             <div className="mt-6 flex flex-col items-center">
               <p className="text-gray-500 text-sm">Want to spread the word?</p>
               <button
-                onClick={openShareModal}
-                className="mt-2 text-blue-700 font-semibold hover:underline hover:text-blue-900 transition duration-200"
+                onClick={handleNativeShare}
+                className="mt-2 text-blue-700 px-2 bg-blue-50 rounded-full font-semibold hover:underline hover:text-blue-900 transition duration-200"
               >
                 Share this Campaign
               </button>
@@ -670,20 +675,19 @@ console.log(donationuser)
       <LoginModel
         open={isLoginModalVisible}
         onClose={() => setIsLoginModalVisible(false)}
-     // must pass this correctly!
-     isDonation={true}
-     setIsDonationModalVisible={setIsDonationModalVisible}
-     setDonationuser={setDonationuser}
-     />
+        // must pass this correctly!
+        isDonation={isDonation}
+        setIsDonationModalVisible={setIsDonationModalVisible}
+        setDonationuser={setDonationuser}
+      />
 
       {/* Donation Modal */}
       {isDonationModalVisible && (
         <DonationForm
-        donationuser={donationuser}
+          donationuser={donationuser}
           open={isDonationModalVisible}
           handleClose={closeDonationModal}
-     setIsDonationModalVisible={setIsDonationModalVisible}
-
+          setIsDonationModalVisible={setIsDonationModalVisible}
           donation_campaign_id={id}
         />
       )}

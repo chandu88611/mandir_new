@@ -4,6 +4,7 @@ import { message } from "antd";
 import {
   useLoginUserMutation,
   useVerifyOtpMutation,
+  useUpdateUserMutation,
 } from "../../redux/services/campaignApi";
 import { useDispatch, useSelector } from "react-redux";
 import { IoClose } from "react-icons/io5";
@@ -23,10 +24,12 @@ const DonationForm = ({
   console.log(donationuser);
   const [loginUser] = useLoginUserMutation(); // Login mutation
   const [verifyOtp] = useVerifyOtpMutation(); // OTP verification mutation
+  const [updateUser] = useUpdateUserMutation(); // Redux API to update user
+
   const [verifyPayment] = useVerifyPaymentMutation(); // OTP verification mutation
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.userData);
-  console.log(user);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   // const [donationAmount, setDonationAmount] = useState('');
   const [supportPercent, setSupportPercent] = useState(5);
@@ -35,10 +38,10 @@ const DonationForm = ({
   const [total, setTotal] = useState();
   const [createOrder] = useCreateOrderMutation();
   const [userData, setUserData1] = useState({
-    full_name: "",
-    email: "",
-    mobile_number: "",
+    full_name: donationuser?.full_name || "",
+    email: donationuser?.email || "",
   });
+
   const [timer, setTimer] = useState(0);
   const [citizenStatus, setCitizenStatus] = useState("yes");
   const [showError, setShowError] = useState(false);
@@ -50,10 +53,11 @@ const DonationForm = ({
   const [percent, setPercent] = useState((minAmount / target) * 100);
   const [donationAmount, setDonationAmount] = useState(minAmount);
   const [error, setError] = useState("");
-  const [infoErrors, setInfoErrors] = useState({
-    full_name: "",
-    email: "",
-  });
+  // const [infoErrors, setInfoErrors] = useState({
+  //   full_name: "",
+  //   email: "",
+  // });
+  const [infoErrors, setInfoErrors] = useState({});
 
   const [foreignError, setForeignError] = useState(false);
 
@@ -160,59 +164,52 @@ const DonationForm = ({
     return true;
   };
 
+  useEffect(() => {
+    if (donationuser) {
+      setUserData1({
+        full_name: donationuser.full_name || "",
+        email: donationuser.email || "",
+      });
+    }
+  }, [donationuser]);
+
   const handleDonateNow = async () => {
-    const newErrors = {};
+    const errors = {};
 
-    if (!userData.full_name) {
-      newErrors.full_name = "Full Name is required";
-    }
-    if (!userData.email) {
-      newErrors.email = "Email is required";
-    }
-    if (citizenStatus === "no") {
-      setForeignError(true);
-      message.error("Sorry, this service is only for Indian citizens.");
+    // Validate input fields
+    if (!userData.full_name) errors.full_name = "Full Name is required";
+    if (!userData.email) errors.email = "Email is required";
+
+    if (Object.keys(errors).length > 0) {
+      setInfoErrors(errors);
       return;
     }
 
-    // If any errors, set and return
-    if (Object.keys(newErrors).length > 0) {
-      setInfoErrors(newErrors);
-      return;
-    }
-
-    setInfoErrors({}); // Clear errors if no issues
-
-    if (!isLoggedIn) {
-      try {
-        const response = await loginUser({
-          name: userData.full_name,
+    try {
+      // ✅ If user is NEW (i.e., no name or email), update their details
+      if (!donationuser.full_name || !donationuser.email) {
+        await updateUser({
+          mobile: donationuser.mobile, // Keep existing mobile number
+          full_name: userData.full_name,
           email: userData.email,
-          mobile_number: userData.mobile_number,
-        }).unwrap();
+        });
 
-        message.success(response.message);
-
-        setOtpModalVisible(true);
-        setTimer(30);
-      } catch (error) {
-        message.error(error.data?.error || "Error sending OTP.");
+        message.success("User details updated successfully");
       }
-    } else {
-      const res = await initiatePayment();
-      message.success("Donation successful.");
-      handleClose();
+
+      // ✅ Proceed with payment (For both new & existing users)
+      await initiatePayment();
+    } catch (error) {
+      message.error(error.data?.error || "Something went wrong.");
     }
   };
 
-  console.log(userData);
-  // Function to handle OTP form submission
   const handleOtpSubmit = async () => {
     if (otp.length === 6) {
       // Call the verify OTP API
       try {
         const response = await verifyOtp({
-          mobile_number: userData.mobile_number,
+          mobile_number: donationuser.mobile_number,
           otp: otp,
         });
 
@@ -241,7 +238,7 @@ const DonationForm = ({
   const initiatePayment = async () => {
     try {
       const orderResponse = await createOrder({
-        user_id: user?.userData?._id,
+        user_id: donationuser?._id,
         donation_campaign_id: donation_campaign_id, // Replace this dynamically
         amount: calculateTotal(),
         // payment_method: "upi",
@@ -341,10 +338,12 @@ const DonationForm = ({
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
             donation_campaign_id: donation_campaign_id,
-            user_id: user?.userData?._id,
+            user_id: donationuser._id,
             amount: calculateTotal(),
+            donorName: donationuser.full_name,
+            email: donationuser.email,
           }).unwrap();
-
+          console.log(verifyResponse);
           if (verifyResponse.success) {
             message.success("Payment successful! Thank you for your donation.");
             setIsDonationModalVisible(false);
@@ -359,16 +358,16 @@ const DonationForm = ({
         }
       },
       prefill: {
-        name: userData.full_name,
-        email: userData.email,
-        contact: userData.mobile_number,
+        name: donationuser.full_name,
+        email: donationuser.email,
+        contact: donationuser.mobile_number,
       },
       theme: {
         color: "#3399cc",
       },
     };
-
     const razorpayInstance = new window.Razorpay(options);
+
     razorpayInstance.open();
   };
   const handleResendOtp = async () => {
@@ -414,42 +413,40 @@ const DonationForm = ({
               Your Information
             </h2>
 
-            {!donationuser?.user?.full_name ? (
+            {!donationuser?.full_name ? (
               <>
                 {/* Full Name */}
                 <input
                   type="text"
                   className={`w-full md:p-2 p-1 border ${
                     infoErrors.full_name ? "border-red-500" : "border-gray-300"
-                  } rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition placeholder:text-xs md:mb-1 mb-1`}
+                  } rounded-lg focus:outline-none`}
                   placeholder="Full Name"
                   value={userData.full_name}
                   onChange={(e) =>
-                    setUserData1({ ...userData, full_name: e.target.value })
+                    setUserData1((prev) => ({
+                      ...prev,
+                      full_name: e.target.value,
+                    }))
                   }
                 />
                 {infoErrors.full_name && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {infoErrors.full_name}
-                  </p>
+                  <p className="text-red-500 text-xs">{infoErrors.full_name}</p>
                 )}
-
                 {/* Email */}
                 <input
                   type="email"
                   className={`w-full md:p-2 p-1 border ${
                     infoErrors.email ? "border-red-500" : "border-gray-300"
-                  } rounded-lg focus:outline-none focus:border-[#8d7f24] hover:border-[#8d7f24] transition placeholder:text-xs md:mb-1 mb-1`}
+                  } rounded-lg focus:outline-none`}
                   placeholder="Email Address"
                   value={userData.email}
                   onChange={(e) =>
-                    setUserData1({ ...userData, email: e.target.value })
+                    setUserData1((prev) => ({ ...prev, email: e.target.value }))
                   }
                 />
                 {infoErrors.email && (
-                  <p className="text-red-500 text-xs mt-0.5">
-                    {infoErrors.email}
-                  </p>
+                  <p className="text-red-500 text-xs">{infoErrors.email}</p>
                 )}
                 {/* Phone Number */}
                 {/* <div className="flex gap-4 md:mb-4 mb-1">
@@ -472,7 +469,6 @@ const DonationForm = ({
                     required
                   />
                 </div> */}
-
                 {/* Citizenship Question */}
                 <div className="md:mt-4 mt-3">
                   <p className="md:mb-3 mb-1 mt-2 md:mt-1 md:text-sm text-xs">
@@ -523,7 +519,6 @@ const DonationForm = ({
                     )}
                   </div>
                 </div>
-
                 <p className="text-[10px] text-gray-500 md:mt-4 mt-4">
                   By proceeding, you are agreeing to Impact Giveaze Foundation's{" "}
                   <a
@@ -551,13 +546,13 @@ const DonationForm = ({
                 {/* Show User's Information When Logged In */}
 
                 <p className="mb-4 text-lg font-medium">
-                  👤 {donationuser?.user?.full_name}
+                  👤 {donationuser?.full_name}
                 </p>
                 <p className="mb-4 text-lg font-medium">
-                  📧 {donationuser?.user?.email}
+                  📧 {donationuser?.email}
                 </p>
                 <p className="mb-4 text-lg font-medium">
-                  📞 {donationuser?.user?.mobile_number}
+                  📞 {donationuser?.mobile_number}
                 </p>
               </>
             )}
