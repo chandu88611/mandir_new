@@ -168,6 +168,14 @@ export const campaignApi = createApi({
       }),
       providesTags: ["donations"],
     }),
+    getDonationReceipt: builder.query({
+      query: (transactionId) => ({
+        url: `donation_campaign/donations/receipt/${transactionId}`,
+        method: "GET",
+        responseType: "blob", // <- Add this
+        providesTags: [],
+      }),
+    }),
   }),
 });
 
@@ -192,4 +200,5 @@ export const {
   useGetAllCampaignQuery,
   useGetCampaignDonationsQuery,
   useUpdateDonationDetailsMutation,
+  useLazyGetDonationReceiptQuery,
 } = campaignApi;

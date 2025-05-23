@@ -61,6 +61,10 @@ const axiosBaseQuery =
         params,
         headers: requestOpts.headers,
       };
+      // Add this block 👇
+      if (requestOpts.responseType === "blob") {
+        axiosOptions.responseType = "blob";
+      }
 
       if (/^(auth\/)/.test(url)) {
         axiosOptions["withCredentials"] = true;

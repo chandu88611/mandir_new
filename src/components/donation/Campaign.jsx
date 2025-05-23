@@ -147,6 +147,19 @@ const CampaignPage = () => {
   const firstDonation = sortedByDate[sortedByDate.length - 1];
   const topDonation = sortedByAmount[0];
 
+  const uniqueDonations = [
+    { donor: recentDonation, label: "Recent Donation" },
+    { donor: firstDonation, label: "First Donation" },
+    { donor: topDonation, label: "Top Donation" },
+  ].filter(
+    (item, index, self) =>
+      self.findIndex(
+        (i) => i.donor?.id === item.donor?.id && i.label !== item.label
+      ) === index
+  );
+
+  console.log(uniqueDonations);
+
   // const sortedDonations = [...mockDonations].sort((a, b) =>
   //   dayjs(b.date).diff(dayjs(a.date))
   // );
